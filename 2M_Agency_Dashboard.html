@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2M Marketing Agency AI — Dashboard</title>
+<style>
+  :root {
+    --navy: #1B2A4A;
+    --navy-light: #243660;
+    --navy-dark: #111c33;
+    --gold: #C9A84C;
+    --gold-light: #e0c06a;
+    --gold-dim: rgba(201,168,76,0.15);
+    --white: #FFFFFF;
+    --gray: #8892a4;
+    --gray-dim: rgba(136,146,164,0.1);
+    --green: #2ecc71;
+    --red: #e74c3c;
+    --amber: #f39c12;
+    --bg: #0d1526;
+    --bg2: #141f35;
+    --bg3: #1a2844;
+    --border: rgba(201,168,76,0.2);
+    --text: #c8d4e8;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background:var(--bg); color:var(--text); height:100vh; overflow:hidden; display:flex; flex-direction:column; }
+
+  /* TOP BAR */
+  .topbar { display:flex; align-items:center; gap:12px; padding:10px 20px; background:var(--bg2); border-bottom:1px solid var(--border); flex-shrink:0; }
+  .logo { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:var(--gold); letter-spacing:1px; white-space:nowrap; }
+  .logo-icon { width:28px; height:28px; background:var(--gold); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--navy-dark); font-weight:900; }
+  .cmd-bar { flex:1; background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:8px 14px; display:flex; align-items:center; gap:10px; cursor:text; }
+  .cmd-placeholder { color:var(--gray); font-size:12.5px; flex:1; }
+  .cmd-tag { background:var(--gold-dim); color:var(--gold); font-size:11px; padding:2px 8px; border-radius:4px; border:1px solid var(--border); }
+  .status-pills { display:flex; gap:8px; align-items:center; }
+  .pill { font-size:11px; padding:4px 10px; border-radius:20px; display:flex; align-items:center; gap:5px; white-space:nowrap; }
+  .pill-green { background:rgba(46,204,113,0.15); color:var(--green); border:1px solid rgba(46,204,113,0.3); }
+  .pill-gold { background:var(--gold-dim); color:var(--gold); border:1px solid var(--border); }
+  .dot { width:6px; height:6px; border-radius:50%; background:currentColor; }
+  .dot.pulse { animation:pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* MAIN LAYOUT */
+  .main { display:flex; flex:1; overflow:hidden; }
+
+  /* LEFT SIDEBAR */
+  .sidebar-left { width:200px; background:var(--bg2); border-right:1px solid var(--border); padding:16px 12px; display:flex; flex-direction:column; gap:16px; flex-shrink:0; overflow-y:auto; }
+  .section-title { font-size:10px; text-transform:uppercase; letter-spacing:1.5px; color:var(--gray); margin-bottom:8px; }
+  .metric-row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--gray-dim); }
+  .metric-label { font-size:12px; color:var(--text); }
+  .metric-val { font-size:12px; font-weight:700; color:var(--gold); }
+  .metric-val.green { color:var(--green); }
+  .perf-item { margin-bottom:10px; }
+  .perf-label { font-size:11px; color:var(--gray); margin-bottom:4px; display:flex; justify-content:space-between; }
+  .progress-bar { height:4px; background:var(--bg3); border-radius:2px; overflow:hidden; }
+  .progress-fill { height:100%; border-radius:2px; background:var(--gold); transition:width 0.5s; }
+  .progress-fill.blue { background:#3b82f6; }
+  .system-item { display:flex; justify-content:space-between; align-items:center; padding:5px 0; }
+  .sys-label { font-size:11px; color:var(--gray); }
+  .badge-green { font-size:10px; background:rgba(46,204,113,0.15); color:var(--green); padding:2px 7px; border-radius:10px; }
+  .badge-amber { font-size:10px; background:rgba(243,156,18,0.15); color:var(--amber); padding:2px 7px; border-radius:10px; }
+
+  /* CENTER */
+  .center { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+  .center-header { padding:14px 20px; border-bottom:1px solid var(--border); flex-shrink:0; }
+  .greeting { font-size:18px; font-weight:700; color:var(--white); }
+  .greeting span { color:var(--gold); }
+  .greeting-sub { font-size:12px; color:var(--gray); margin-top:3px; }
+  .center-body { flex:1; overflow:hidden; position:relative; }
+
+  /* ORBIT */
+  #orbit-canvas { width:100%; height:100%; }
+  .orbit-wrap { position:relative; width:100%; height:100%; }
+  svg#orbit { width:100%; height:100%; }
+
+  /* BOTTOM STATS */
+  .bottom-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--border); border-top:1px solid var(--border); flex-shrink:0; }
+  .stat-box { background:var(--bg2); padding:10px 16px; display:flex; flex-direction:column; gap:3px; }
+  .stat-box-title { font-size:10px; color:var(--gray); text-transform:uppercase; letter-spacing:1px; }
+  .stat-box-val { font-size:13px; font-weight:700; color:var(--gold); }
+  .stat-box-sub { font-size:11px; color:var(--gray); }
+
+  /* RIGHT SIDEBAR */
+  .sidebar-right { width:240px; background:var(--bg2); border-left:1px solid var(--border); padding:14px 12px; display:flex; flex-direction:column; gap:16px; flex-shrink:0; overflow-y:auto; }
+  .campaign-card { background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-bottom:8px; }
+  .camp-name { font-size:12px; font-weight:600; color:var(--white); margin-bottom:4px; }
+  .camp-meta { font-size:11px; color:var(--gray); margin-bottom:6px; }
+  .camp-progress { display:flex; align-items:center; gap:8px; }
+  .camp-pct { font-size:11px; color:var(--gold); font-weight:700; width:32px; }
+  .activity-item { display:flex; gap:8px; padding:6px 0; border-bottom:1px solid var(--gray-dim); align-items:flex-start; }
+  .act-dot { width:6px; height:6px; border-radius:50%; background:var(--gold); margin-top:5px; flex-shrink:0; }
+  .act-dot.blue { background:#3b82f6; }
+  .act-dot.green { background:var(--green); }
+  .act-text { font-size:11px; color:var(--text); line-height:1.4; }
+  .act-time { font-size:10px; color:var(--gray); }
+  .token-bar { margin-top:6px; }
+  .token-nums { display:flex; justify-content:space-between; font-size:11px; color:var(--gray); margin-bottom:4px; }
+  .kv-item { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid var(--gray-dim); }
+  .kv-name { font-size:12px; color:var(--text); }
+  .kv-count { font-size:11px; color:var(--gold); }
+
+  /* TABS */
+  .tabs { display:flex; background:var(--bg2); border-top:1px solid var(--border); flex-shrink:0; }
+  .tab { flex:1; padding:8px 4px; text-align:center; font-size:11px; color:var(--gray); cursor:pointer; border-top:2px solid transparent; transition:all 0.2s; display:flex; flex-direction:column; align-items:center; gap:2px; }
+  .tab:hover { color:var(--text); }
+  .tab.active { color:var(--gold); border-top-color:var(--gold); background:var(--gold-dim); }
+  .tab-icon { font-size:14px; }
+
+  /* PANELS */
+  .panel { display:none; flex:1; overflow-y:auto; padding:20px; }
+  .panel.active { display:block; }
+
+  /* CAMPAIGN PANEL */
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .form-group { display:flex; flex-direction:column; gap:6px; }
+  .form-group.full { grid-column:1/-1; }
+  .form-label { font-size:11px; color:var(--gray); text-transform:uppercase; letter-spacing:1px; }
+  .form-input { background:var(--bg3); border:1px solid var(--border); border-radius:6px; padding:8px 12px; color:var(--text); font-size:13px; outline:none; transition:border-color 0.2s; }
+  .form-input:focus { border-color:var(--gold); }
+  .form-input::placeholder { color:var(--gray); }
+  select.form-input option { background:var(--bg2); }
+  .btn { padding:8px 20px; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; border:none; transition:all 0.2s; }
+  .btn-gold { background:var(--gold); color:var(--navy-dark); }
+  .btn-gold:hover { background:var(--gold-light); }
+  .btn-outline { background:transparent; color:var(--gold); border:1px solid var(--border); }
+  .btn-outline:hover { background:var(--gold-dim); }
+  .panel-title { font-size:16px; font-weight:700; color:var(--white); margin-bottom:4px; }
+  .panel-sub { font-size:12px; color:var(--gray); margin-bottom:20px; }
+  .workflow-list { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px; }
+  .wf-card { background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:14px; cursor:pointer; transition:all 0.2s; }
+  .wf-card:hover, .wf-card.selected { border-color:var(--gold); background:var(--gold-dim); }
+  .wf-card-name { font-size:13px; font-weight:600; color:var(--white); margin-bottom:4px; }
+  .wf-card-desc { font-size:11px; color:var(--gray); }
+  .wf-nodes { display:flex; align-items:center; gap:6px; margin-top:8px; flex-wrap:wrap; }
+  .wf-node { font-size:10px; background:var(--bg2); border:1px solid var(--border); border-radius:4px; padding:2px 8px; color:var(--gray); }
+  .divider { height:1px; background:var(--border); margin:20px 0; }
+
+  /* KNOWLEDGE PANEL */
+  .knowledge-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .kv-box { background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:16px; }
+  .kv-box-title { font-size:13px; font-weight:600; color:var(--white); margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+  .source-item { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--gray-dim); }
+  .source-name { font-size:12px; color:var(--text); }
+  .source-status { font-size:10px; padding:2px 8px; border-radius:10px; }
+  .source-active { background:rgba(46,204,113,0.15); color:var(--green); }
+  .source-pending { background:rgba(201,168,76,0.15); color:var(--gold); }
+
+  /* OPERATIONS PANEL */
+  .ops-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px; }
+  .ops-metric { background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:16px; text-align:center; }
+  .ops-big { font-size:28px; font-weight:800; color:var(--gold); }
+  .ops-label { font-size:11px; color:var(--gray); margin-top:4px; }
+  .agent-table { width:100%; border-collapse:collapse; font-size:12px; }
+  .agent-table th { text-align:left; padding:8px 12px; font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--gray); border-bottom:1px solid var(--border); }
+  .agent-table td { padding:8px 12px; border-bottom:1px solid var(--gray-dim); }
+  .model-badge { font-size:10px; background:var(--bg3); border:1px solid var(--border); padding:2px 8px; border-radius:4px; color:var(--gray); }
+
+  /* AGENTS PANEL */
+  .agents-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  .agent-card { background:var(--bg3); border:1px solid var(--border); border-radius:10px; padding:16px; position:relative; overflow:hidden; }
+  .agent-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--gold); }
+  .agent-avatar { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px; margin-bottom:10px; }
+  .agent-nickname { font-size:15px; font-weight:700; color:var(--white); }
+  .agent-role { font-size:11px; color:var(--gold); margin-bottom:8px; }
+  .agent-desc { font-size:11px; color:var(--gray); line-height:1.5; }
+  .agent-status { display:flex; align-items:center; gap:5px; margin-top:10px; font-size:11px; color:var(--green); }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width:4px; }
+  ::-webkit-scrollbar-track { background:var(--bg); }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+  /* ORBIT AGENT TOOLTIPS */
+  .agent-tooltip { position:absolute; background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:11px; color:var(--text); pointer-events:none; z-index:10; white-space:nowrap; display:none; }
+  .orbit-wrap:hover .agent-tooltip { display:block; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-icon">2M</div>
+    <span>2M MARKETING AGENCY AI</span>
+  </div>
+  <div class="cmd-bar" onclick="document.getElementById('cmdInput').focus()">
+    <span style="font-size:13px;color:var(--gray)">⌘</span>
+    <input id="cmdInput" style="flex:1;background:none;border:none;outline:none;color:var(--text);font-size:12.5px" placeholder="Ra lệnh cho AI agency: gọi Anh Tổng, tạo campaign, chạy workflow..." />
+    <span class="cmd-tag">Command</span>
+  </div>
+  <div class="status-pills">
+    <div class="pill pill-green"><div class="dot pulse"></div> 6/6 Agent Online</div>
+    <div class="pill pill-gold">🔥 0 Campaign Running</div>
+    <div class="pill pill-gold" id="tokenPill">Tokens: 0</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- LEFT SIDEBAR -->
+  <div class="sidebar-left">
+    <div>
+      <div class="section-title">Company Overview</div>
+      <div class="metric-row"><span class="metric-label">Agents Online</span><span class="metric-val green" id="agentsOnline">6 / 6</span></div>
+      <div class="metric-row"><span class="metric-label">Active Campaigns</span><span class="metric-val" id="activeCampaigns">0</span></div>
+      <div class="metric-row"><span class="metric-label">Workflows Saved</span><span class="metric-val">4</span></div>
+      <div class="metric-row"><span class="metric-label">Tasks in Queue</span><span class="metric-val" id="tasksQueue">0</span></div>
+    </div>
+    <div>
+      <div class="section-title">Performance Today</div>
+      <div class="perf-item">
+        <div class="perf-label"><span>Content Created</span><span id="contentCount">0</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:0%" id="contentBar"></div></div>
+      </div>
+      <div class="perf-item">
+        <div class="perf-label"><span>Leads Tracked</span><span id="leadsCount">0</span></div>
+        <div class="progress-bar"><div class="progress-fill blue" style="width:0%" id="leadsBar"></div></div>
+      </div>
+      <div class="perf-item">
+        <div class="perf-label"><span>Tokens Used</span><span id="tokensLeft">0</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:0%;background:#8b5cf6" id="tokenBar"></div></div>
+      </div>
+    </div>
+    <div>
+      <div class="section-title">System Status</div>
+      <div class="system-item"><span class="sys-label">Claude API</span><span class="badge-green">Healthy</span></div>
+      <div class="system-item"><span class="sys-label">File Storage</span><span class="badge-green">Healthy</span></div>
+      <div class="system-item"><span class="sys-label">Knowledge Vault</span><span class="badge-green">Ready</span></div>
+      <div class="system-item"><span class="sys-label">Auto-Scheduler</span><span class="badge-amber">Manual</span></div>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div class="center">
+    <!-- Header greeting -->
+    <div class="center-header" id="mainHeader" style="display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div class="greeting">Good evening, <span>Anh Tuan</span> 👋</div>
+        <div class="greeting-sub">2M Marketing Agency AI — Full-Service GC Marketing Command Center · Huntsville, AL</div>
+      </div>
+      <div style="font-size:12px;color:var(--gray)" id="clockDisplay"></div>
+    </div>
+
+    <!-- Panels -->
+    <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;" id="panelContainer">
+
+      <!-- HOME: Orbit View -->
+      <div class="panel active" id="panel-home" style="padding:0;position:relative;overflow:hidden;">
+        <div class="orbit-wrap" style="width:100%;height:calc(100% - 52px)">
+          <svg id="orbit" viewBox="0 0 700 400" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" style="stop-color:#1a2844;stop-opacity:1"/>
+                <stop offset="100%" style="stop-color:#0d1526;stop-opacity:1"/>
+              </radialGradient>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            <rect width="700" height="400" fill="url(#bgGrad)"/>
+            <!-- Grid lines -->
+            <g stroke="rgba(201,168,76,0.05)" stroke-width="1">
+              <line x1="0" y1="200" x2="700" y2="200"/>
+              <line x1="350" y1="0" x2="350" y2="400"/>
+            </g>
+            <!-- Orbit rings -->
+            <circle cx="350" cy="200" r="80" fill="none" stroke="rgba(201,168,76,0.08)" stroke-width="1" stroke-dasharray="4,4"/>
+            <circle cx="350" cy="200" r="140" fill="none" stroke="rgba(201,168,76,0.06)" stroke-width="1" stroke-dasharray="3,6"/>
+            <circle cx="350" cy="200" r="180" fill="none" stroke="rgba(201,168,76,0.04)" stroke-width="1" stroke-dasharray="2,8"/>
+            <!-- Connection lines (animated) -->
+            <g id="connection-lines" opacity="0.3">
+              <line x1="350" y1="200" x2="350" y2="60" stroke="var(--gold)" stroke-width="0.8"/>
+              <line x1="350" y1="200" x2="490" y2="130" stroke="var(--gold)" stroke-width="0.8"/>
+              <line x1="350" y1="200" x2="490" y2="270" stroke="var(--gold)" stroke-width="0.8"/>
+              <line x1="350" y1="200" x2="350" y2="340" stroke="var(--gold)" stroke-width="0.8"/>
+              <line x1="350" y1="200" x2="210" y2="270" stroke="var(--gold)" stroke-width="0.8"/>
+              <line x1="350" y1="200" x2="210" y2="130" stroke="var(--gold)" stroke-width="0.8"/>
+            </g>
+            <!-- CENTER: Little Boss -->
+            <circle cx="350" cy="200" r="40" fill="var(--navy)" stroke="var(--gold)" stroke-width="2" filter="url(#glow)"/>
+            <circle cx="350" cy="200" r="36" fill="var(--gold)" opacity="0.1"/>
+            <text x="350" y="195" text-anchor="middle" fill="var(--gold)" font-size="14" font-weight="bold">👑</text>
+            <text x="350" y="212" text-anchor="middle" fill="var(--white)" font-size="9" font-weight="700">ANH TUAN</text>
+            <text x="350" y="224" text-anchor="middle" fill="var(--gold)" font-size="8">LITTLE BOSS</text>
+            <!-- AGENT 1: Anh Tổng (CMO) - TOP -->
+            <g id="agent-cmo" class="agent-node" style="cursor:pointer" onclick="showAgentInfo('cmo')">
+              <circle cx="350" cy="60" r="28" fill="var(--bg2)" stroke="var(--gold)" stroke-width="1.5" filter="url(#glow)"/>
+              <text x="350" y="55" text-anchor="middle" font-size="14">🎯</text>
+              <text x="350" y="69" text-anchor="middle" fill="var(--gold)" font-size="8" font-weight="700">Anh Tổng</text>
+              <text x="350" y="79" text-anchor="middle" fill="var(--gray)" font-size="7">CMO AI</text>
+              <circle cx="371" cy="41" r="5" fill="var(--green)" stroke="var(--bg)" stroke-width="1.5"/>
+            </g>
+            <!-- AGENT 2: Bé Viết (Content) - TOP RIGHT -->
+            <g id="agent-content" style="cursor:pointer" onclick="showAgentInfo('content')">
+              <circle cx="490" cy="130" r="28" fill="var(--bg2)" stroke="#3b82f6" stroke-width="1.5"/>
+              <text x="490" y="125" text-anchor="middle" font-size="14">✍️</text>
+              <text x="490" y="139" text-anchor="middle" fill="#60a5fa" font-size="8" font-weight="700">Bé Viết</text>
+              <text x="490" y="149" text-anchor="middle" fill="var(--gray)" font-size="7">Content Mgr</text>
+              <circle cx="511" cy="111" r="5" fill="var(--green)" stroke="var(--bg)" stroke-width="1.5"/>
+            </g>
+            <!-- AGENT 3: Chị Brand (Brand) - BOTTOM RIGHT -->
+            <g id="agent-brand" style="cursor:pointer" onclick="showAgentInfo('brand')">
+              <circle cx="490" cy="270" r="28" fill="var(--bg2)" stroke="#a855f7" stroke-width="1.5"/>
+              <text x="490" y="265" text-anchor="middle" font-size="14">🎨</text>
+              <text x="490" y="279" text-anchor="middle" fill="#c084fc" font-size="8" font-weight="700">Chị Brand</text>
+              <text x="490" y="289" text-anchor="middle" fill="var(--gray)" font-size="7">Brand Director</text>
+              <circle cx="511" cy="251" r="5" fill="var(--green)" stroke="var(--bg)" stroke-width="1.5"/>
+            </g>
+            <!-- AGENT 4: Thám Tử (Insight) - BOTTOM -->
+            <g id="agent-insight" style="cursor:pointer" onclick="showAgentInfo('insight')">
+              <circle cx="350" cy="340" r="28" fill="var(--bg2)" stroke="#10b981" stroke-width="1.5"/>
+              <text x="350" y="335" text-anchor="middle" font-size="14">🔍</text>
+              <text x="350" y="349" text-anchor="middle" fill="#34d399" font-size="8" font-weight="700">Thám Tử</text>
+              <text x="350" y="359" text-anchor="middle" fill="var(--gray)" font-size="7">Insight Intel</text>
+              <circle cx="371" cy="321" r="5" fill="var(--green)" stroke="var(--bg)" stroke-width="1.5"/>
+            </g>
+            <!-- AGENT 5: Chốt Đơn (Lead) - BOTTOM LEFT -->
+            <g id="agent-lead" style="cursor:pointer" onclick="showAgentInfo('lead')">
+              <circle cx="210" cy="270" r="28" fill="var(--bg2)" stroke="#f59e0b" stroke-width="1.5"/>
+              <text x="210" y="265" text-anchor="middle" font-size="14">📞</text>
+              <text x="210" y="279" text-anchor="middle" fill="#fbbf24" font-size="8" font-weight="700">Chốt Đơn</text>
+              <text x="210" y="289" text-anchor="middle" fill="var(--gray)" font-size="7">Lead Outreach</text>
+              <circle cx="231" cy="251" r="5" fill="var(--green)" stroke="var(--bg)" stroke-width="1.5"/>
+            </g>
+            <!-- AGENT 6: Số Học (Analytics) - TOP LEFT -->
+            <g id="agent-analytics" style="cursor:pointer" onclick="showAgentInfo('analytics')">
+              <circle cx="210" cy="130" r="28" fill="var(--bg2)" stroke="#ef4444" stroke-width="1.5"/>
+              <text x="210" y="125" text-anchor="middle" font-size="14">📊</text>
+              <text x="210" y="139" text-anchor="middle" fill="#f87171" font-size="8" font-weight="700">Số Học</text>
+              <text x="210" y="149" text-anchor="middle" fill="var(--gray)" font-size="7">Analytics Mgr</text>
+              <circle cx="231" cy="111" r="5" fill="var(--green)" stroke="var(--bg)" stroke-width="1.5"/>
+            </g>
+            <!-- Labels -->
+            <text x="590" y="365" fill="rgba(201,168,76,0.3)" font-size="9">AI COMPANY ORBIT · 2M Construction LLC</text>
+          </svg>
+        </div>
+        <!-- Bottom stats -->
+        <div class="bottom-stats">
+          <div class="stat-box">
+            <div class="stat-box-title">Active Campaigns</div>
+            <div class="stat-box-val" id="sb-campaigns">0 Campaign · 0 Agent</div>
+            <div class="stat-box-sub">Chưa có campaign nào đang chạy</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-box-title">Content Production</div>
+            <div class="stat-box-val" id="sb-content">Bé Viết sẵn sàng</div>
+            <div class="stat-box-sub">0 bài soạn · 0 bài chờ đăng</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-box-title">Publishing Queue</div>
+            <div class="stat-box-val" id="sb-queue">0 bài trong hàng đợi</div>
+            <div class="stat-box-sub">Tất cả chờ Anh Tuan duyệt</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CAMPAIGN PANEL -->
+      <div class="panel" id="panel-campaign">
+        <div class="panel-title">🎯 Action Pipeline — Tạo Campaign Mới</div>
+        <div class="panel-sub">Điền brief → chọn workflow → AI tự phân việc xuống các agent</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Tên Campaign / Dự Án</label>
+            <input class="form-input" id="campName" placeholder="VD: Facebook June Week 3, Promo Deck Summer" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Trạng Thái</label>
+            <select class="form-input" id="campStatus">
+              <option>Draft</option>
+              <option>Approved</option>
+              <option>Running</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Mục Tiêu / Offer</label>
+            <input class="form-input" id="campGoal" placeholder="VD: Tăng nhận diện thương hiệu, quảng bá dịch vụ epoxy garage mùa hè" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Dịch Vụ Muốn Đẩy</label>
+            <select class="form-input" id="campService">
+              <option>Tất cả dịch vụ (Full-Service GC)</option>
+              <option>Deck & Patio</option>
+              <option>Fence</option>
+              <option>Epoxy Garage Floor</option>
+              <option>Interior/Exterior Painting</option>
+              <option>Flooring (LVP/Hardwood)</option>
+              <option>Tile & Backsplash</option>
+              <option>Drywall</option>
+              <option>Concrete</option>
+              <option>Kitchen Cabinets</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Thời Gian</label>
+            <input class="form-input" id="campTime" placeholder="VD: Tuần 3 tháng 6, 7 ngày" />
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div style="font-size:13px;font-weight:600;color:var(--white);margin-bottom:12px;">Chọn Workflow Template</div>
+        <div class="workflow-list">
+          <div class="wf-card selected" id="wf1" onclick="selectWF('wf1')">
+            <div class="wf-card-name">📱 Social Media Weekly</div>
+            <div class="wf-card-desc">Anh Tổng → Bé Viết soạn bài → Chị Brand review → Anh Tuan duyệt</div>
+            <div class="wf-nodes">
+              <span class="wf-node">Brief</span>
+              <span class="wf-node">CMO</span>
+              <span class="wf-node">Content</span>
+              <span class="wf-node">Brand Review</span>
+              <span class="wf-node">Approval</span>
+            </div>
+          </div>
+          <div class="wf-card" id="wf2" onclick="selectWF('wf2')">
+            <div class="wf-card-name">🔍 Competitor Research</div>
+            <div class="wf-card-desc">Thám Tử nghiên cứu → Số Học phân tích → CMO tổng hợp → Báo cáo</div>
+            <div class="wf-nodes">
+              <span class="wf-node">Research</span>
+              <span class="wf-node">Analyze</span>
+              <span class="wf-node">Report</span>
+            </div>
+          </div>
+          <div class="wf-card" id="wf3" onclick="selectWF('wf3')">
+            <div class="wf-card-name">📞 Lead Follow-Up</div>
+            <div class="wf-card-desc">Chốt Đơn soạn tin → Anh Tuan duyệt → Track kết quả</div>
+            <div class="wf-nodes">
+              <span class="wf-node">Draft</span>
+              <span class="wf-node">Approval</span>
+              <span class="wf-node">Send</span>
+              <span class="wf-node">Track</span>
+            </div>
+          </div>
+          <div class="wf-card" id="wf4" onclick="selectWF('wf4')">
+            <div class="wf-card-name">🏗️ Project Showcase</div>
+            <div class="wf-card-desc">Before/After content: Bé Viết caption → Chị Brand visual → Đăng</div>
+            <div class="wf-nodes">
+              <span class="wf-node">Photos</span>
+              <span class="wf-node">Caption</span>
+              <span class="wf-node">Design</span>
+              <span class="wf-node">Post</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px">
+          <button class="btn btn-gold" onclick="createCampaign()">🚀 Chạy Workflow Campaign</button>
+          <button class="btn btn-outline">💾 Lưu Draft</button>
+        </div>
+        <div id="campOutput" style="display:none;margin-top:20px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:16px;"></div>
+      </div>
+
+      <!-- AGENTS PANEL -->
+      <div class="panel" id="panel-agents">
+        <div class="panel-title">🤖 AI Company Agents</div>
+        <div class="panel-sub">6 agent chuyên môn · Tất cả sẵn sàng nhận lệnh từ Anh Tuan</div>
+        <div class="agents-grid">
+          <div class="agent-card">
+            <div class="agent-avatar" style="background:rgba(201,168,76,0.15)">🎯</div>
+            <div class="agent-nickname">Anh Tổng</div>
+            <div class="agent-role">CMO AI — Điều Phối Chính</div>
+            <div class="agent-desc">Nhận lệnh từ Anh Tuan, phân việc cho 5 agent dưới, tổng hợp kết quả trình duyệt. Não bộ của cả hệ thống.</div>
+            <div class="agent-status"><div class="dot" style="background:var(--green)"></div> Online · Chờ lệnh</div>
+          </div>
+          <div class="agent-card" style="--accent:#3b82f6">
+            <div class="agent-avatar" style="background:rgba(59,130,246,0.15)">✍️</div>
+            <div class="agent-nickname">Bé Viết</div>
+            <div class="agent-role">Content & Marketing Manager</div>
+            <div class="agent-desc">Viết bài FB, Nextdoor, Angi Pro. Caption before/after. Song ngữ Việt-Anh. Chuyên gia nội dung của 2M.</div>
+            <div class="agent-status"><div class="dot" style="background:var(--green)"></div> Online · Sẵn sàng</div>
+          </div>
+          <div class="agent-card">
+            <div class="agent-avatar" style="background:rgba(168,85,247,0.15)">🎨</div>
+            <div class="agent-nickname">Chị Brand</div>
+            <div class="agent-role">Brand & Creative Director</div>
+            <div class="agent-desc">Giữ bộ nhận diện Navy/Gold/White. Review tone giọng văn. Đảm bảo 2M luôn là full-service GC.</div>
+            <div class="agent-status"><div class="dot" style="background:var(--green)"></div> Online · Sẵn sàng</div>
+          </div>
+          <div class="agent-card">
+            <div class="agent-avatar" style="background:rgba(16,185,129,0.15)">🔍</div>
+            <div class="agent-nickname">Thám Tử</div>
+            <div class="agent-role">Insight & Competitor Intelligence</div>
+            <div class="agent-desc">Theo dõi đối thủ GC ở Huntsville/Madison County. Xu hướng nhu cầu địa phương. Phát hiện cơ hội thị trường.</div>
+            <div class="agent-status"><div class="dot" style="background:var(--green)"></div> Online · Sẵn sàng</div>
+          </div>
+          <div class="agent-card">
+            <div class="agent-avatar" style="background:rgba(245,158,11,0.15)">📞</div>
+            <div class="agent-nickname">Chốt Đơn</div>
+            <div class="agent-role">Lead & Outreach Manager</div>
+            <div class="agent-desc">Cold outreach subcontractor. Follow-up lead Angi Pro. Soạn email/SMS. Nhắc Anh Tuan đến deadline liên hệ.</div>
+            <div class="agent-status"><div class="dot" style="background:var(--green)"></div> Online · Sẵn sàng</div>
+          </div>
+          <div class="agent-card">
+            <div class="agent-avatar" style="background:rgba(239,68,68,0.15)">📊</div>
+            <div class="agent-nickname">Số Học</div>
+            <div class="agent-role">Analytics & Performance Manager</div>
+            <div class="agent-desc">Đo hiệu quả bài đăng. Tổng hợp lead theo nguồn. Báo cáo tuần/tháng. Đề xuất điều chỉnh chiến lược.</div>
+            <div class="agent-status"><div class="dot" style="background:var(--green)"></div> Online · Sẵn sàng</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KNOWLEDGE VAULT PANEL -->
+      <div class="panel" id="panel-knowledge">
+        <div class="panel-title">🧠 Knowledge Vault</div>
+        <div class="panel-sub">Nguồn thông tin các agent học từ đó · Cập nhật = agent thông minh hơn</div>
+        <div class="knowledge-grid">
+          <div class="kv-box">
+            <div class="kv-box-title">📋 Brand Guidelines</div>
+            <div class="source-item"><span class="source-name">Brand Voice & Tone</span><span class="source-status source-active">✓ Active</span></div>
+            <div class="source-item"><span class="source-name">Color System (Navy/Gold/White)</span><span class="source-status source-active">✓ Active</span></div>
+            <div class="source-item"><span class="source-name">Service List (Full-Service GC)</span><span class="source-status source-active">✓ Active</span></div>
+            <div class="source-item"><span class="source-name">Taglines & Messaging</span><span class="source-status source-active">✓ Active</span></div>
+          </div>
+          <div class="kv-box">
+            <div class="kv-box-title">📱 Social Media Sources</div>
+            <div class="source-item"><span class="source-name">Facebook Page 2M Construction</span><span class="source-status source-pending">Chưa kết nối</span></div>
+            <div class="source-item"><span class="source-name">Angi Pro Profile</span><span class="source-status source-pending">Chưa kết nối</span></div>
+            <div class="source-item"><span class="source-name">Google Business Profile</span><span class="source-status source-pending">Chưa kết nối</span></div>
+            <div class="source-item"><span class="source-name">Nextdoor Profile</span><span class="source-status source-pending">Chưa kết nối</span></div>
+          </div>
+          <div class="kv-box">
+            <div class="kv-box-title">🔍 Competitor Intel</div>
+            <div class="source-item"><span class="source-name">Huntsville GC Top 10 (Google)</span><span class="source-status source-pending">Chưa cập nhật</span></div>
+            <div class="source-item"><span class="source-name">Facebook Ad Library Local GC</span><span class="source-status source-pending">Chưa cập nhật</span></div>
+            <div class="source-item"><span class="source-name">Nextdoor Recommendations</span><span class="source-status source-pending">Chưa cập nhật</span></div>
+          </div>
+          <div class="kv-box">
+            <div class="kv-box-title">📁 SOP Library</div>
+            <div class="source-item"><span class="source-name">Weekly Ops Checklist</span><span class="source-status source-active">✓ Active</span></div>
+            <div class="source-item"><span class="source-name">Follow-up Templates</span><span class="source-status source-active">✓ Active</span></div>
+            <div class="source-item"><span class="source-name">Cold Outreach Templates</span><span class="source-status source-active">✓ Active</span></div>
+            <div class="source-item"><span class="source-name">Analytics Report Format</span><span class="source-status source-active">✓ Active</span></div>
+          </div>
+        </div>
+        <div style="margin-top:16px;padding:14px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--gray)">
+          💡 <strong style="color:var(--text)">Cách dùng Knowledge Vault:</strong> Các file trong thư mục <code style="color:var(--gold)">Ai Agentcy for 2M Construction/</code> chính là Knowledge Vault của bạn. Khi giao việc cho agent, đính kèm file liên quan → agent sẽ học từ đó và tạo output đúng brand.
+        </div>
+      </div>
+
+      <!-- OPERATIONS PANEL -->
+      <div class="panel" id="panel-ops">
+        <div class="panel-title">⚙️ Operations Monitor</div>
+        <div class="panel-sub">Hiệu suất hệ thống · Token usage · Model hoạt động</div>
+        <div class="ops-grid">
+          <div class="ops-metric">
+            <div class="ops-big" id="ops-taskrate">—</div>
+            <div class="ops-label">Task Completion Rate</div>
+          </div>
+          <div class="ops-metric">
+            <div class="ops-big" id="ops-tokens">0</div>
+            <div class="ops-label">Tokens Used This Month</div>
+          </div>
+          <div class="ops-metric">
+            <div class="ops-big">6</div>
+            <div class="ops-label">Agents Active</div>
+          </div>
+        </div>
+        <div style="margin-bottom:12px;font-size:12px;font-weight:600;color:var(--white)">Model Hoạt Động</div>
+        <table class="agent-table">
+          <tr>
+            <th>Agent</th>
+            <th>Nickname</th>
+            <th>Model Được Dùng</th>
+            <th>Lý Do</th>
+          </tr>
+          <tr>
+            <td>CMO AI</td>
+            <td style="color:var(--gold)">Anh Tổng</td>
+            <td><span class="model-badge">claude-sonnet-4-6</span></td>
+            <td style="color:var(--gray)">Điều phối phức tạp</td>
+          </tr>
+          <tr>
+            <td>Content Manager</td>
+            <td style="color:#60a5fa">Bé Viết</td>
+            <td><span class="model-badge">claude-sonnet-4-6</span></td>
+            <td style="color:var(--gray)">Viết sáng tạo cao</td>
+          </tr>
+          <tr>
+            <td>Brand Director</td>
+            <td style="color:#c084fc">Chị Brand</td>
+            <td><span class="model-badge">claude-haiku-4-5</span></td>
+            <td style="color:var(--gray)">Review nhanh, tiết kiệm</td>
+          </tr>
+          <tr>
+            <td>Insight Intel</td>
+            <td style="color:#34d399">Thám Tử</td>
+            <td><span class="model-badge">claude-sonnet-4-6</span></td>
+            <td style="color:var(--gray)">Phân tích sâu</td>
+          </tr>
+          <tr>
+            <td>Lead Outreach</td>
+            <td style="color:#fbbf24">Chốt Đơn</td>
+            <td><span class="model-badge">claude-haiku-4-5</span></td>
+            <td style="color:var(--gray)">Template nhanh</td>
+          </tr>
+          <tr>
+            <td>Analytics</td>
+            <td style="color:#f87171">Số Học</td>
+            <td><span class="model-badge">claude-haiku-4-5</span></td>
+            <td style="color:var(--gray)">Số liệu đơn giản</td>
+          </tr>
+        </table>
+      </div>
+
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <div class="tab active" id="tab-home" onclick="switchTab('home')"><div class="tab-icon">🏠</div>Home</div>
+      <div class="tab" id="tab-campaign" onclick="switchTab('campaign')"><div class="tab-icon">🎯</div>Campaign</div>
+      <div class="tab" id="tab-agents" onclick="switchTab('agents')"><div class="tab-icon">🤖</div>Agents</div>
+      <div class="tab" id="tab-knowledge" onclick="switchTab('knowledge')"><div class="tab-icon">🧠</div>Knowledge</div>
+      <div class="tab" id="tab-ops" onclick="switchTab('ops')"><div class="tab-icon">⚙️</div>Operations</div>
+    </div>
+  </div>
+
+  <!-- RIGHT SIDEBAR -->
+  <div class="sidebar-right">
+    <div>
+      <div class="section-title">Active Campaigns</div>
+      <div id="activeCampList" style="color:var(--gray);font-size:12px;padding:8px 0">Chưa có campaign nào đang chạy. Tạo campaign đầu tiên →</div>
+    </div>
+    <div>
+      <div class="section-title">Live Activity</div>
+      <div id="activityFeed">
+        <div class="activity-item">
+          <div class="act-dot green"></div>
+          <div><div class="act-text">Hệ thống khởi động · 6 agent online</div><div class="act-time">Vừa xong</div></div>
+        </div>
+        <div class="activity-item">
+          <div class="act-dot blue"></div>
+          <div><div class="act-text">Knowledge Vault: Brand Guidelines loaded</div><div class="act-time">1 phút trước</div></div>
+        </div>
+        <div class="activity-item">
+          <div class="act-dot"></div>
+          <div><div class="act-text">3 bài Facebook đã soạn · Chờ Anh Tuan duyệt</div><div class="act-time">Hôm nay</div></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="section-title">Token Usage</div>
+      <div class="token-bar">
+        <div class="token-nums"><span id="tokenUsed">0 used</span><span>∞ Claude</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:1%;background:#8b5cf6" id="tokenBarRight"></div></div>
+      </div>
+    </div>
+    <div>
+      <div class="section-title">Knowledge Vault</div>
+      <div class="kv-item"><span class="kv-name">Brand Guidelines</span><span class="kv-count">4 files</span></div>
+      <div class="kv-item"><span class="kv-name">SOP Library</span><span class="kv-count">4 SOPs</span></div>
+      <div class="kv-item"><span class="kv-name">Content Templates</span><span class="kv-count">3 posts</span></div>
+      <div class="kv-item"><span class="kv-name">Outreach Templates</span><span class="kv-count">3 templates</span></div>
+      <div class="kv-item"><span class="kv-name">Competitor Intel</span><span class="kv-count">Chưa có</span></div>
+    </div>
+    <div>
+      <div class="section-title">Cần Làm Ngay</div>
+      <div style="font-size:11px;color:var(--text);line-height:1.8">
+        <div style="padding:4px 0;border-bottom:1px solid var(--gray-dim)">☐ Điền số ĐT vào 3 bài FB</div>
+        <div style="padding:4px 0;border-bottom:1px solid var(--gray-dim)">☐ Duyệt & đăng Bài 1 (bài ghim)</div>
+        <div style="padding:4px 0;border-bottom:1px solid var(--gray-dim)">☐ Kết nối Facebook Page</div>
+        <div style="padding:4px 0;border-bottom:1px solid var(--gray-dim)">☐ Tạo campaign đầu tiên</div>
+        <div style="padding:4px 0">☐ Update competitor intel</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AGENT INFO MODAL -->
+<div id="agentModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;align-items:center;justify-content:center;">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:400px;width:90%;position:relative">
+    <button onclick="closeModal()" style="position:absolute;top:12px;right:12px;background:none;border:none;color:var(--gray);font-size:18px;cursor:pointer">✕</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script>
+// Clock
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clockDisplay').textContent =
+    now.toLocaleDateString('vi-VN', {weekday:'long', year:'numeric', month:'long', day:'numeric'}) +
+    ' · ' + now.toLocaleTimeString('vi-VN');
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// Greeting by time
+function updateGreeting() {
+  const h = new Date().getHours();
+  const greet = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+  document.querySelector('.greeting').innerHTML = greet + ', <span>Anh Tuan</span> 👋';
+}
+updateGreeting();
+
+// Tab switching
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+  // show/hide header
+  document.getElementById('mainHeader').style.display = name === 'home' ? 'flex' : 'none';
+}
+
+// Workflow selection
+let selectedWF = 'wf1';
+function selectWF(id) {
+  document.querySelectorAll('.wf-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById(id).classList.add('selected');
+  selectedWF = id;
+}
+
+// Campaign creation
+let campaigns = [];
+let tokenCount = 0;
+function createCampaign() {
+  const name = document.getElementById('campName').value || 'Campaign mới';
+  const goal = document.getElementById('campGoal').value || 'Tăng nhận diện thương hiệu';
+  const service = document.getElementById('campService').value;
+  const time = document.getElementById('campTime').value || '7 ngày';
+  const wfNames = { wf1: 'Social Media Weekly', wf2: 'Competitor Research', wf3: 'Lead Follow-Up', wf4: 'Project Showcase' };
+  const wf = wfNames[selectedWF];
+  const tokensAdded = Math.floor(Math.random() * 2000) + 500;
+  tokenCount += tokensAdded;
+  // Update metrics
+  campaigns.push({ name, goal, service, wf });
+  document.getElementById('activeCampaigns').textContent = campaigns.length;
+  document.getElementById('tasksQueue').textContent = campaigns.length * 3;
+  document.getElementById('tokenPill').textContent = 'Tokens: ' + tokenCount.toLocaleString();
+  document.getElementById('ops-tokens').textContent = tokenCount.toLocaleString();
+  document.getElementById('tokenUsed').textContent = tokenCount.toLocaleString() + ' used';
+  // Output
+  const out = document.getElementById('campOutput');
+  out.style.display = 'block';
+  out.innerHTML = `
+    <div style="color:var(--gold);font-weight:700;margin-bottom:12px">✅ Campaign Đã Khởi Động</div>
+    <div style="font-size:12px;color:var(--text);line-height:2">
+      <div>📌 <strong>Tên:</strong> ${name}</div>
+      <div>🎯 <strong>Mục tiêu:</strong> ${goal}</div>
+      <div>🔨 <strong>Dịch vụ:</strong> ${service}</div>
+      <div>⏱️ <strong>Thời gian:</strong> ${time}</div>
+      <div>⚙️ <strong>Workflow:</strong> ${wf}</div>
+    </div>
+    <div style="margin-top:12px;padding:10px;background:var(--bg);border-radius:6px;font-size:11px;color:var(--gray)">
+      🤖 <strong style="color:var(--text)">Anh Tổng đang phân việc...</strong><br/>
+      → Bé Viết: Soạn nội dung cho campaign "${name}"<br/>
+      → Chị Brand: Review tone và branding<br/>
+      → Anh Tuan: Duyệt trước khi đăng<br/>
+      <br/>
+      <em style="color:var(--gold)">→ Mở Claude, paste system prompt từ 01_CMO/ROLE.md, và ra lệnh cụ thể để agent bắt đầu làm việc.</em>
+    </div>`;
+  // Update sidebar campaign list
+  updateCampList();
+  addActivity(`Campaign "${name}" đã tạo · ${wf} đang chạy`);
+}
+
+function updateCampList() {
+  const el = document.getElementById('activeCampList');
+  if (campaigns.length === 0) { el.innerHTML = '<span style="color:var(--gray);font-size:12px">Chưa có campaign</span>'; return; }
+  el.innerHTML = campaigns.map(c => `
+    <div class="campaign-card">
+      <div class="camp-name">${c.name}</div>
+      <div class="camp-meta">${c.wf} · ${c.service}</div>
+      <div class="camp-progress">
+        <div class="progress-bar" style="flex:1"><div class="progress-fill" style="width:15%"></div></div>
+        <span class="camp-pct">15%</span>
+      </div>
+    </div>`).join('');
+}
+
+function addActivity(text) {
+  const feed = document.getElementById('activityFeed');
+  const item = document.createElement('div');
+  item.className = 'activity-item';
+  item.innerHTML = `<div class="act-dot pulse"></div><div><div class="act-text">${text}</div><div class="act-time">Vừa xong</div></div>`;
+  feed.insertBefore(item, feed.firstChild);
+}
+
+// Agent info modal
+const agentData = {
+  cmo: { emoji:'🎯', name:'Anh Tổng', role:'CMO AI — Chief Marketing Officer', color:'var(--gold)', desc:'Não bộ của hệ thống. Nhận lệnh từ Anh Tuan, phân việc cho 5 agent dưới. Tổng hợp kết quả và trình duyệt.', how:'Mở Claude → Paste system prompt từ <strong>01_CMO/ROLE.md</strong> → Ra lệnh bằng tiếng Việt.' },
+  content: { emoji:'✍️', name:'Bé Viết', role:'Content & Marketing Manager', color:'#60a5fa', desc:'Chuyên gia nội dung. Viết bài FB, Nextdoor, Angi Pro. Caption before/after. Song ngữ Việt-Anh. Tone: chuyên nghiệp & tin cậy.', how:'Mở Claude → Paste system prompt từ <strong>02_Content_Marketing/ROLE.md</strong> → Mô tả dự án vừa xong.' },
+  brand: { emoji:'🎨', name:'Chị Brand', role:'Brand & Creative Director', color:'#c084fc', desc:'Người giữ linh hồn thương hiệu 2M. Navy/Gold/White. Review mọi nội dung trước khi đăng. Đảm bảo 2M luôn là full-service GC.', how:'Mở Claude → Paste system prompt từ <strong>03_Brand_Creative/ROLE.md</strong> → Paste bài đăng cần review.' },
+  insight: { emoji:'🔍', name:'Thám Tử', role:'Insight & Competitor Intelligence', color:'#34d399', desc:'Trinh sát thị trường. Theo dõi top GC Huntsville, Madison County. Phát hiện khoảng trống thị trường và cơ hội cho 2M.', how:'Mở Claude → Paste system prompt từ <strong>04_Insight_Competitor/ROLE.md</strong> → Yêu cầu báo cáo đối thủ.' },
+  lead: { emoji:'📞', name:'Chốt Đơn', role:'Lead & Outreach Manager', color:'#fbbf24', desc:'Chuyên gia sales outreach. Soạn cold email cho GC sub, follow-up lead Angi Pro, yêu cầu review từ khách cũ.', how:'Mở Claude → Paste system prompt từ <strong>05_Lead_Outreach/ROLE.md</strong> → Cung cấp tên/thông tin khách.' },
+  analytics: { emoji:'📊', name:'Số Học', role:'Analytics & Performance Manager', color:'#f87171', desc:'Chuyên gia số liệu. Tổng hợp reach/engagement, nguồn lead, tỷ lệ chuyển đổi. Báo cáo tuần/tháng ngắn gọn, actionable.', how:'Mở Claude → Paste system prompt từ <strong>06_Analytics_Performance/ROLE.md</strong> → Cung cấp số liệu tuần này.' }
+};
+function showAgentInfo(id) {
+  const a = agentData[id];
+  document.getElementById('modalContent').innerHTML = `
+    <div style="font-size:32px;margin-bottom:8px">${a.emoji}</div>
+    <div style="font-size:18px;font-weight:700;color:${a.color}">${a.name}</div>
+    <div style="font-size:12px;color:var(--gray);margin-bottom:12px">${a.role}</div>
+    <div style="font-size:12px;color:var(--text);line-height:1.6;margin-bottom:12px">${a.desc}</div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px;font-size:11px;color:var(--gray)">
+      <strong style="color:var(--gold)">Cách gọi agent này:</strong><br/>${a.how}
+    </div>`;
+  document.getElementById('agentModal').style.display = 'flex';
+}
+function closeModal() { document.getElementById('agentModal').style.display = 'none'; }
+document.getElementById('agentModal').addEventListener('click', function(e) { if(e.target===this) closeModal(); });
+
+// CMD bar
+document.getElementById('cmdInput').addEventListener('keydown', function(e) {
+  if(e.key === 'Enter' && this.value.trim()) {
+    const cmd = this.value.toLowerCase();
+    if(cmd.includes('campaign')) switchTab('campaign');
+    else if(cmd.includes('agent')) switchTab('agents');
+    else if(cmd.includes('knowledge') || cmd.includes('vault')) switchTab('knowledge');
+    else if(cmd.includes('ops') || cmd.includes('operations')) switchTab('ops');
+    addActivity('Command: "' + this.value + '"');
+    this.value = '';
+  }
+});
+
+// Animate connection lines
+let lineOpacity = 0.3;
+let dir = 1;
+setInterval(() => {
+  lineOpacity += 0.02 * dir;
+  if(lineOpacity > 0.6 || lineOpacity < 0.1) dir *= -1;
+  const lines = document.getElementById('connection-lines');
+  if(lines) lines.setAttribute('opacity', lineOpacity);
+}, 50);
+</script>
+</body>
+</html>
