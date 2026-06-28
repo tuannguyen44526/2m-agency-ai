@@ -10,6 +10,7 @@ import anthropic
 import os
 import json
 import time
+import base64
 from datetime import datetime
 from pathlib import Path
 from dotenv import load_dotenv
@@ -502,6 +503,38 @@ def clean_text(md_text: str) -> str:
     t = re.sub(r"`(.+?)`", r"\1", t)
     t = re.sub(r"^- ", "• ", t, flags=re.MULTILINE)
     return t.strip()
+
+def upload_image_to_host(image_bytes: bytes, filename: str = "image.jpg") -> str:
+    """Upload ảnh lên free image host, trả về URL public để dùng cho Facebook/Instagram."""
+    # Thử freeimage.host trước
+    try:
+        b64 = base64.b64encode(image_bytes).decode()
+        r = requests.post(
+            "https://freeimage.host/api/1/upload",
+            data={"key": "6d207e02198a847aa98d0a2a901485a5", "source": b64, "action": "upload"},
+            timeout=30
+        )
+        if r.status_code == 200:
+            data = r.json()
+            url = data.get("image", {}).get("url", "")
+            if url:
+                return url
+    except Exception:
+        pass
+    # Fallback: imgbb.com anonymous upload
+    try:
+        b64 = base64.b64encode(image_bytes).decode()
+        r = requests.post(
+            "https://api.imgbb.com/1/upload",
+            data={"key": "2e2935fb27f157c65c4b9c1a2e6d2cb8", "image": b64, "name": filename},
+            timeout=30
+        )
+        if r.status_code == 200:
+            data = r.json()
+            return data.get("data", {}).get("url", "")
+    except Exception:
+        pass
+    return ""
 
 def fb_post_now(page_id: str, token: str, message: str, image_url: str = "") -> dict:
     """Post to Facebook Page immediately."""
@@ -1526,21 +1559,54 @@ if st.session_state.get("pending_approval"):
             sched_date = st.date_input("Ngày đăng:", value=datetime.now().date() + timedelta(days=1))
             sched_time_str = st.text_input("Giờ đăng (HH:MM, giờ CST):", value="11:00")
 
-    # --- Image URL for Instagram ---
+    # --- Image upload + URL for Facebook/Instagram ---
     img_url = ""
-    if ig_connected or post_mode != "Lưu file (thủ công)":
-        img_url = st.text_input(
-            "🖼️ URL ảnh để đăng Instagram (để trống nếu chưa có):",
-            placeholder="https://... (ảnh phải public, min 320px)",
-            help="Instagram bắt buộc cần ảnh. Facebook có thể đăng text-only."
+    st.markdown("#### 🖼️ Hình ảnh (tùy chọn cho Facebook, bắt buộc cho Instagram)")
+    _img_col1, _img_col2 = st.columns([1, 1])
+    with _img_col1:
+        _uploaded_img = st.file_uploader(
+            "📤 Upload ảnh từ máy tính:",
+            type=["jpg", "jpeg", "png", "webp", "gif"],
+            key="publish_img_upload",
+            help="Ảnh sẽ tự động upload lên cloud và lấy URL public"
         )
+        if _uploaded_img is not None:
+            st.image(_uploaded_img, caption=_uploaded_img.name, width=220)
+            _img_cache_key = f"pub_img_url_{_uploaded_img.name}_{_uploaded_img.size}"
+            if _img_cache_key not in st.session_state:
+                with st.spinner("☁️ Đang upload ảnh lên cloud..."):
+                    _img_bytes = _uploaded_img.getvalue()
+                    _uploaded_url = upload_image_to_host(_img_bytes, _uploaded_img.name)
+                    st.session_state[_img_cache_key] = _uploaded_url
+            _cached_url = st.session_state.get(_img_cache_key, "")
+            if _cached_url:
+                st.success("✅ Upload thành công!")
+                img_url = _cached_url
+            else:
+                st.warning("⚠️ Upload thất bại. Nhập URL thủ công bên phải.")
+    with _img_col2:
+        _manual_url = st.text_input(
+            "🔗 Hoặc nhập URL ảnh (phải public):",
+            value=img_url if img_url else "",
+            placeholder="https://example.com/image.jpg (min 320px)",
+            key="publish_img_url_manual",
+            help="Paste URL ảnh đã có sẵn trên internet"
+        )
+        if _manual_url:
+            img_url = _manual_url.strip()
+            try:
+                st.image(img_url, width=220)
+            except Exception:
+                pass
+    if img_url:
+        st.caption(f"🔗 URL ảnh: `{img_url[:80]}{'...' if len(img_url) > 80 else ''}`")
 
     # --- Platform selection ---
     plat_col1, plat_col2, plat_col3, plat_col4, plat_col5 = st.columns(5)
     with plat_col1:
         do_fb = st.checkbox("📘 Facebook", value=fb_connected)
     with plat_col2:
-        do_ig = st.checkbox("📸 Instagram", value=ig_connected and bool(img_url))
+        do_ig = st.checkbox("📸 Instagram", value=ig_connected)
     with plat_col3:
         do_wp = st.checkbox("🌐 Website", value=wp_connected())
     with plat_col4:
