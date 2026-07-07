@@ -1111,39 +1111,33 @@ def get_weekly_commands() -> list:
             plan_text = p.read_text(encoding="utf-8")
             break
 
-    # Nếu có plan → đưa vào prompt để sinh lệnh
-    if plan_text:
-        # Trả về gợi ý dựa trên plan (parsed thủ công đơn giản)
+    # Chỉ dùng WEEKLY_PLAN.md nếu nó viết cho ĐÚNG tuần hiện tại — tránh gợi ý cũ
+    if plan_text and (f"Tuần {week_num}" in plan_text or f"TUẦN {week_num}" in plan_text or f"[Tuần {week_num}]" in plan_text):
         lines = [l.strip() for l in plan_text.splitlines() if l.strip() and not l.startswith("#")]
         cmds = [l.lstrip("-•* ") for l in lines if len(l) > 20][:6]
         if cmds:
             return cmds
 
-    # Fallback: xoay vòng theo tuần + mùa
-    season_services = {
-        (3,4,5):   ["epoxy garage floor","deck & patio","fence","concrete driveway","exterior painting"],
-        (6,7,8):   ["epoxy garage floor","deck & patio","concrete","flooring","cabinet refacing"],
-        (9,10,11): ["kitchen cabinet","interior painting","flooring","drywall","bathroom tile"],
-        (12,1,2):  ["interior painting","flooring","kitchen remodel","drywall repair","cabinet refacing"],
-    }
-    services = ["epoxy garage floor","deck & patio","fence","flooring","kitchen cabinet","concrete"]
-    for months, svcs in season_services.items():
-        if month in months:
-            services = svcs
-            break
+    # Ưu tiên theo CHIẾN LƯỢC HIỆN TẠI: sàn → tile → remodel lên đầu (cố định, không xoay theo mùa)
+    # Muốn đổi thứ tự ưu tiên: sửa danh sách này
+    services = [
+        "flooring (hardwood & LVP)",
+        "tile (sàn, shower & backsplash)",
+        "remodel (kitchen & bathroom)",
+        "epoxy garage floor",
+        "deck & patio",
+        "interior & exterior painting",
+    ]
+    s1, s2, s3, s4, s5, s6 = services
 
-    svc1 = services[(week_num) % len(services)]
-    svc2 = services[(week_num + 1) % len(services)]
-    svc3 = services[(week_num + 2) % len(services)]
-
-    week_label = f"Tuần {week_num}"
+    wk = f"Tuần {week_num}"
     return [
-        f"[{week_label}] Tạo content Facebook + Instagram về dịch vụ {svc1} tại Huntsville AL — SEO tốt, có lịch đăng",
-        f"[{week_label}] Viết bài Nextdoor giới thiệu dịch vụ {svc1} cho khu Madison & Harvest",
-        f"[{week_label}] Soạn 2 bài: before/after {svc1} và tips chọn nhà thầu uy tín Huntsville",
-        f"[{week_label}] Tạo content {svc2} với keyword quick-win cho Huntsville AL + lịch đăng cả tuần",
-        f"[{week_label}] Viết bài Google Business Post về {svc2} — tối ưu SEO local map pack",
-        f"[{week_label}] Lập báo cáo hiệu quả marketing tuần {week_num-1} và kế hoạch tuần {week_num} cho dịch vụ {svc3}",
+        f"[{wk}] Tạo content Facebook + Instagram về dịch vụ {s1} tại Huntsville AL — SEO tốt, kèm lịch đăng",
+        f"[{wk}] Viết bài Nextdoor giới thiệu dịch vụ {s2} cho khu Madison, Harvest & Meridianville",
+        f"[{wk}] Soạn bài before/after dịch vụ {s3} + caption song ngữ Việt-Anh cho cộng đồng người Việt",
+        f"[{wk}] Viết bài Google Business Post về {s4} — tối ưu SEO local map pack Huntsville",
+        f"[{wk}] Viết bài blog SEO cho website: tips về {s5} cho chủ nhà North Alabama",
+        f"[{wk}] Tạo content giới thiệu 2M là full-service general contractor — nhấn mạnh {s6} và free estimate",
     ]
 
 st.markdown("### ⌘ Ra Lệnh Cho Agency")

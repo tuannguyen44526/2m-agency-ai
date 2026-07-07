@@ -1,16 +1,12 @@
 # KẾ HOẠCH MARKETING HÀNG TUẦN — 2M CONSTRUCTION LLC
-# File này Anh Tuan cập nhật mỗi tuần → App tự tạo lệnh nhanh theo kế hoạch
+# File này Anh Tuan cập nhật khi muốn TỰ ĐỊNH lệnh nhanh cho tuần
 
-## HƯỚNG DẪN SỬ DỤNG
-# Mỗi dòng bắt đầu bằng "- " = 1 lệnh nhanh trong app
-# Xóa hết và viết lại mỗi đầu tuần
-# App đọc tối đa 6 dòng đầu tiên làm lệnh nhanh
+## CÁCH HOẠT ĐỘNG (đã nâng cấp 07/2026)
+# - App CHỈ dùng file này nếu nội dung ghi đúng tuần hiện tại, VD: "[Tuần 29] ..."
+# - Nếu file cũ hoặc trống → app TỰ SINH 6 lệnh chung phủ đều các lĩnh vực 2M,
+#   dịch vụ nổi bật tự xoay theo tuần + mùa (không cần đụng file này)
+# - Mỗi dòng bắt đầu bằng "- " = 1 lệnh nhanh, tối đa 6 dòng đầu
 
-## TUẦN 27 (30/6 – 6/7/2026) — DỊCH VỤ TRỌNG TÂM: EPOXY & BÊ TÔNG
-
-- [Tuần 27] Tạo content Facebook + Instagram về epoxy garage floor Huntsville AL — ảnh before/after, SEO tốt, lên lịch Thứ 4 11am
-- [Tuần 27] Viết bài Nextdoor khu Madison & Harvest: vừa hoàn thành epoxy garage cho khách, mời hàng xóm xem
-- [Tuần 27] Soạn bài Google Business Post về concrete driveway Huntsville AL — tối ưu map pack
-- [Tuần 27] Tạo content Facebook về concrete patio + deck combo — target khu Hampton Cove, lên lịch Thứ 6 12pm
-- [Tuần 27] Viết bài tips "3 lý do nên làm epoxy garage trước mùa hè Huntsville" — có SEO keyword + lịch đăng cả tuần
-- [Tuần 27] Lập báo cáo hiệu quả marketing tuần 26 và kế hoạch content tuần 27 cho 2M Construction
+## VÍ DỤ (xóa dấu # đầu dòng và sửa đúng số tuần khi muốn dùng):
+# - [Tuần 29] Tạo content Facebook về epoxy garage floor Huntsville AL — ảnh before/after
+# - [Tuần 29] Viết bài Nextdoor khu Madison: vừa hoàn thành dự án deck cho khách
