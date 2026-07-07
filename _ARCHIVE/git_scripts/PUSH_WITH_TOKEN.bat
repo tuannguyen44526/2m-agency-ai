@@ -4,7 +4,7 @@ echo === Xoa lock files ===
 del /f /q ".git\index.lock" 2>nul
 del /f /q ".git\config.lock" 2>nul
 echo === Luu credentials vao git-credentials ===
-echo https://tuannguyen44526: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@github.com> "%USERPROFILE%\.git-credentials"
+echo https://tuannguyen44526:<TOKEN_DA_XOA_-_PHAI_REVOKE_TREN_GITHUB>@github.com> "%USERPROFILE%\.git-credentials"
 echo === Config git ===
 git config user.email "tuannguyen44526@gmail.com"
 git config user.name "Tuan Nguyen"

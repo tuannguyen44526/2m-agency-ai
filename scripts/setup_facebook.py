@@ -3,10 +3,22 @@ Chạy script này 1 lần để kết nối Facebook & Instagram vào 2M Agency
 Tự động: lấy Page Token, Page ID, IG Account ID → ghi vào .env
 """
 import requests, json, os, re
+from dotenv import load_dotenv
 
-LONG_TOKEN = "EAAOTXnXFEFgBR2E4xDg18mDsWv4aiQMcPgAmw8WjzcAPh7BHihxZBnn9DRiUirMAs4LFqvF7RZB5mZAi6BApvNrhVhIQXdG4gKRNnIfrQ1oJvBZBMCLduNGkvgSbXwaKyqoVAP8Q3A98yc5LHfZAN6BRPSm7OLm7HjnGHxIHY9b9bKKmMZAi2HKtz4WjHwTSduPjxdkZCmZBYZBXvjuEKcV1SwPSUTXFdGuxzNS0Yfwkp"
+# .env nằm ở thư mục gốc dự án (script này nằm trong scripts/)
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ENV_PATH = os.path.join(ROOT, ".env")
+load_dotenv(ENV_PATH)
+
+# KHÔNG hardcode token! Đặt FB_LONG_LIVED_TOKEN=... vào file .env trước khi chạy
+LONG_TOKEN = os.environ.get("FB_LONG_LIVED_TOKEN", "")
+if not LONG_TOKEN:
+    print("❌ Thiếu FB_LONG_LIVED_TOKEN trong .env")
+    print("   Lấy token tại: https://developers.facebook.com/tools/explorer")
+    input("\nNhấn Enter để thoát...")
+    exit(1)
+
 GRAPH = "https://graph.facebook.com/v19.0"
-ENV_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
 
 def set_env(content, key, value):
     pattern = rf"^{key}=.*$"
@@ -18,6 +30,33 @@ def set_env(content, key, value):
 print("=" * 50)
 print("2M Agency AI — Facebook & Instagram Setup")
 print("=" * 50)
+
+# Bước 0: Đổi sang token dài hạn (60 ngày) nếu có App ID + Secret trong .env
+APP_ID     = os.environ.get("FB_APP_ID", "")
+APP_SECRET = os.environ.get("FB_APP_SECRET", "")
+if APP_ID and APP_SECRET:
+    print("\n[0/3] Đang đổi token dài hạn (60 ngày)...")
+    r0 = requests.get(f"{GRAPH}/oauth/access_token", params={
+        "grant_type": "fb_exchange_token",
+        "client_id": APP_ID,
+        "client_secret": APP_SECRET,
+        "fb_exchange_token": LONG_TOKEN,
+    }, timeout=15)
+    _d0 = r0.json()
+    if r0.status_code == 200 and "access_token" in _d0:
+        LONG_TOKEN = _d0["access_token"]
+        with open(ENV_PATH, "r", encoding="utf-8") as f:
+            _env = f.read()
+        _env = set_env(_env, "FB_LONG_LIVED_TOKEN", LONG_TOKEN)
+        with open(ENV_PATH, "w", encoding="utf-8") as f:
+            f.write(_env)
+        print("✅ Đã đổi + lưu token DÀI HẠN 60 ngày vào .env")
+    else:
+        print(f"⚠️ Không đổi được token dài hạn: {json.dumps(_d0)[:200]}")
+        print("   → Tiếp tục với token hiện tại (ngắn hạn)")
+else:
+    print("\n⚠️ Chưa có FB_APP_ID / FB_APP_SECRET trong .env")
+    print("   → Token sẽ hết hạn sau ~1-2 giờ. Thêm 2 dòng đó vào .env rồi chạy lại để có token 60 ngày.")
 
 # Bước 1: Lấy danh sách Pages
 print("\n[1/3] Đang lấy danh sách Facebook Pages...")

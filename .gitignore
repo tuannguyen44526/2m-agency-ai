@@ -5,3 +5,5 @@ __pycache__/
 *.pyo
 CAMPAIGNS/
 PUBLISH_QUEUE/
+ig_check_result.txt
+scripts/ig_check_result.txt

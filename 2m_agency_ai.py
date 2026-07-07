@@ -1,13 +1,14 @@
 """
 2M MARKETING AGENCY AI
 ======================
-Gõ 1 lệnh → 7 agent tự chạy → output ra ngay
-Chạy: streamlit run 2m_agency_ai.py
+Gõ 1 lệnh → 8 agent tự chạy → output ra ngay
+Chạy: streamlit run 2m_agency_ai.py  (hoặc double-click 2_RUN.bat)
 """
 
 import streamlit as st
 import anthropic
 import os
+import re
 import json
 import time
 import base64
@@ -17,7 +18,7 @@ from dotenv import load_dotenv
 import requests
 from datetime import timedelta
 
-load_dotenv()
+load_dotenv(override=True)  # .env luôn ưu tiên hơn biến môi trường Windows cũ
 
 # ── Streamlit Cloud Secrets → os.environ (chạy được cả local lẫn cloud) ──
 def _load_streamlit_secrets():
@@ -29,6 +30,7 @@ def _load_streamlit_secrets():
             "FB_PAGE_ID",
             "IG_BUSINESS_ACCOUNT_ID",
             "SITE_ADMIN_PASSWORD",
+            "IMGBB_API_KEY",
         ]
         for _k in _secret_keys:
             if _k in st.secrets and not os.environ.get(_k):
@@ -75,7 +77,7 @@ Ngắn gọn, có số liệu cụ thể, actionable ngay."""
     },
     "con_muoi": {
         "name": "Con Muối 🧂", "role": "Content Brain", "emoji": "🧂",
-        "model": "claude-sonnet-4-6", "color": "#a78bfa",
+        "model": "claude-sonnet-5", "color": "#a78bfa",
         "soul": """Bạn là Con Muối — Content Brain của 2M Construction LLC.
 Chuyên viết hooks và concept tiếng Việt sắc sảo, đời thường, không sáo rỗng.
 Hook phải đánh trúng pain point ngay câu đầu. Dùng ngôn ngữ người thật nói chuyện.
@@ -91,7 +93,7 @@ Viết như kể chuyện cho hàng xóm nghe, nhưng chuyên nghiệp.
     },
     "be_viet": {
         "name": "Bé Viết", "role": "Content Manager", "emoji": "✍️",
-        "model": "claude-sonnet-4-6", "color": "#60a5fa",
+        "model": "claude-sonnet-5", "color": "#60a5fa",
         "soul": """Bạn là Bé Viết — Content & Community Manager của 2M Construction LLC.
 Viết bài đăng hoàn chỉnh cho Facebook, Nextdoor, Angi Pro, Instagram.
 Luôn song ngữ: English (chính) + Tiếng Việt (ngắn hơn).
@@ -176,7 +178,7 @@ LUÔN nhắc: Mọi nội dung cần Anh Tuan duyệt trước khi đăng. KHÔN
     },
     "co_hoc": {
         "name": "Cô Học", "role": "SEO Keyword Strategist", "emoji": "🔬",
-        "model": "claude-sonnet-4-6", "color": "#fb923c",
+        "model": "claude-sonnet-5", "color": "#fb923c",
         "soul": """Bạn là Cô Học — SEO Keyword Strategist của 2M Construction LLC.
 Chuyên xây dựng thư viện keyword và chiến lược SEO địa phương để đẩy website/content lên top nhanh nhất tại Huntsville, AL.
 
@@ -521,12 +523,15 @@ def upload_image_to_host(image_bytes: bytes, filename: str = "image.jpg") -> str
                 return url
     except Exception:
         pass
-    # Fallback: imgbb.com anonymous upload
+    # Fallback: imgbb.com upload (key đọc từ .env / Streamlit secrets — KHÔNG hardcode)
     try:
+        _imgbb_key = os.environ.get("IMGBB_API_KEY", "")
+        if not _imgbb_key:
+            return ""
         b64 = base64.b64encode(image_bytes).decode()
         r = requests.post(
             "https://api.imgbb.com/1/upload",
-            data={"key": "2e2935fb27f157c65c4b9c1a2e6d2cb8", "image": b64, "name": filename},
+            data={"key": _imgbb_key, "image": b64, "name": filename},
             timeout=30
         )
         if r.status_code == 200:
@@ -1242,6 +1247,19 @@ def parse_cmo_json(text: str) -> dict:
         "briefs": briefs
     }
 
+def _resp_text(resp) -> str:
+    """Lấy text từ response — bỏ qua thinking block của model mới (Sonnet 5+)."""
+    parts = []
+    for _blk in resp.content:
+        if getattr(_blk, "type", "") == "text":
+            parts.append(getattr(_blk, "text", ""))
+    if not parts:
+        for _blk in resp.content:
+            _t = getattr(_blk, "text", "")
+            if _t:
+                parts.append(_t)
+    return "\n".join(p for p in parts if p)
+
 def call_agent(client: anthropic.Anthropic, agent_id: str, brief: str, context: str) -> str:
     agent = AGENTS[agent_id]
     system = agent["soul"] + "\n\n===COMPANY INFO===\n" + get_company_ctx()
@@ -1254,17 +1272,17 @@ def call_agent(client: anthropic.Anthropic, agent_id: str, brief: str, context: 
         system=system,
         messages=[{"role": "user", "content": user_msg}]
     )
-    return resp.content[0].text
+    return _resp_text(resp)
 
 def call_cmo(client: anthropic.Anthropic, command: str) -> dict:
     system = CMO_SOUL + "\n\n===COMPANY INFO===\n" + get_company_ctx()
     resp = client.messages.create(
-        model="claude-sonnet-4-6",
+        model="claude-sonnet-5",
         max_tokens=1200,
         system=system,
         messages=[{"role": "user", "content": f'Lệnh từ Anh Tuan: "{command}"'}]
     )
-    return parse_cmo_json(resp.content[0].text)
+    return parse_cmo_json(_resp_text(resp))
 
 BASE_DIR = Path("C:/Users/tomng/Downloads/Ai Agentcy for 2M Construction")
 
@@ -1608,7 +1626,7 @@ if st.session_state.get("pending_approval"):
     with plat_col2:
         do_ig = st.checkbox("📸 Instagram", value=ig_connected)
     with plat_col3:
-        do_wp = st.checkbox("🌐 Website", value=wp_connected())
+        do_wp = st.checkbox("🌐 Website", value=site_connected())
     with plat_col4:
         do_save = st.checkbox("💾 Lưu file", value=True)
     with plat_col5:
@@ -1616,8 +1634,8 @@ if st.session_state.get("pending_approval"):
 
     if not fb_connected and (do_fb or do_ig):
         st.warning("⚠️ Chưa kết nối Facebook API. Xem hướng dẫn kết nối trong sidebar.")
-    if do_wp and not wp_connected():
-        st.warning("⚠️ Chưa kết nối WordPress. Thêm WP_SITE_URL / WP_USERNAME / WP_APP_PASSWORD vào .env")
+    if do_wp and not site_connected():
+        st.warning("⚠️ Chưa kết nối website. Thêm SITE_ADMIN_PASSWORD vào .env (xem ⚙️ Cài đặt Website ở sidebar).")
 
     # --- Buttons ---
     btn_col, dl_col = st.columns([2, 2])
@@ -1702,49 +1720,41 @@ if st.session_state.get("pending_approval"):
         elif do_ig and not ig_connected:
             st.warning("📸 Instagram chưa kết nối — bỏ qua.")
 
-        # === WORDPRESS / WEBSITE ===
-        if do_wp and wp_connected():
+        # === WEBSITE 2MHUNTSVILLE.COM ===
+        if do_wp and site_connected():
             be_quan_out = outputs.get("be_quan", "")
             if not be_quan_out:
                 st.warning("🌐 Không có output từ Bé Quản để đăng website.")
             else:
-                with st.spinner("🌐 Đang chuẩn bị bài blog và đăng lên website..."):
+                with st.spinner("🌐 Đang chuẩn bị bài blog và đăng lên 2mhuntsville.com..."):
                     try:
                         blog = extract_blog_sections(be_quan_out)
-                        # Determine status
-                        if post_mode == "Lên lịch" and schedule_dt:
-                            wp_status = "future"
-                        elif post_mode == "Lưu file (thủ công)":
-                            wp_status = "draft"  # safe draft for manual review
-                        else:
-                            wp_status = "publish"
-                        res = wp_post(
+                        # Site API không hỗ trợ hẹn giờ → Đăng ngay = publish, còn lại = draft
+                        _publish_now = not (post_mode == "Lên lịch" or post_mode == "Lưu file (thủ công)")
+                        res = site_post(
                             title=blog["title"],
-                            html_content=blog["html"],
+                            content_md=blog["html"],
                             excerpt=blog["meta_desc"],
                             tags=blog["tags"],
-                            categories=["Construction Tips", "Local Guide"],
                             slug=blog["slug"],
-                            status=wp_status,
-                            yoast_title=blog["yoast_title"],
-                            yoast_desc=blog["meta_desc"],
-                            focus_kw=blog["focus_kw"],
-                            schedule_dt=schedule_dt if wp_status == "future" else None,
+                            published=_publish_now,
+                            meta_title=blog["yoast_title"],
+                            meta_description=blog["meta_desc"],
                         )
-                        if "error" in res:
+                        if isinstance(res, dict) and res.get("error"):
                             st.error(f"🌐 Website lỗi: {res['error']}")
                         else:
-                            if wp_status == "future":
-                                st.success(f"🌐 Bài blog đã lên lịch: {schedule_dt.strftime('%d/%m/%Y %H:%M')} — [Xem draft]({res.get('link','')})")
-                            elif wp_status == "draft":
-                                st.success(f"🌐 Bài blog đã lưu draft trên WordPress — [Xem draft]({res.get('link','')})")
+                            _slug = (res.get("post", {}) or {}).get("slug", "") or blog["slug"]
+                            _link = f"{SITE_URL}/blog/{_slug}" if _slug else f"{SITE_URL}/blog"
+                            if _publish_now:
+                                st.success(f"🌐 Bài blog đã xuất bản! — [Đọc ngay]({_link})")
                             else:
-                                st.success(f"🌐 Bài blog đã xuất bản! — [Đọc ngay]({res.get('link','')})")
-                            results_log.append(f"WP {wp_status}")
+                                st.success(f"🌐 Bài blog đã lưu draft — vào [{SITE_URL}/admin]({SITE_URL}/admin) để duyệt & đăng.")
+                            results_log.append(f"Site {'publish' if _publish_now else 'draft'}")
                     except Exception as e:
                         st.error(f"🌐 Website exception: {e}")
-        elif do_wp and not wp_connected():
-            st.warning("🌐 WordPress chưa kết nối — bỏ qua.")
+        elif do_wp and not site_connected():
+            st.warning("🌐 Website chưa kết nối — bỏ qua.")
 
         # === SAVE FILES ===
         if do_save:
@@ -1886,7 +1896,7 @@ Bài blog dài 500-800 chữ. SEO local chuẩn. Tiếng Anh."""
                             system=_bm_soul + "\n\n===COMPANY INFO===\n" + get_company_ctx(),
                             messages=[{"role": "user", "content": _bm_brief}],
                         )
-                        _bm_output = _bm_resp.content[0].text
+                        _bm_output = _resp_text(_bm_resp)
                         st.session_state["bm_last_output"] = _bm_output
 
                     except Exception as _bm_e:

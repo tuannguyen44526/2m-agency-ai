@@ -1,12 +1,21 @@
-import requests, json, re
+import requests, json, re, os
+from dotenv import load_dotenv
 
-LONG_TOKEN = "EAAOTXnXFEFgBR2E4xDg18mDsWv4aiQMcPgAmw8WjzcAPh7BHihxZBnn9DRiUirMAs4LFqvF7RZB5mZAi6BApvNrhVhIQXdG4gKRNnIfrQ1oJvBZBMCLduNGkvgSbXwaKyqoVAP8Q3A98yc5LHfZAN6BRPSm7OLm7HjnGHxIHY9b9bKKmMZAi2HKtz4WjHwTSduPjxdkZCmZBYZBXvjuEKcV1SwPSUTXFdGuxzNS0Yfwkp"
-# NEW PAGE TOKEN - generated with pages_read_engagement + pages_manage_posts + pages_show_list
-PAGE_TOKEN = "EAAOTXnXFEFgBR3KXuiZBFmpSHmWB1ZAdTShidlRLC0JcfNaLDuhdvf0PpKKX46sycgVxQe0AbDT0tNa7kJO4O1qVz9GTnTv9QgDLdDU966bfO1kTPyP1Aj0cXO5bahNlRSHsgPV4VEw232gY0846cVqn1xiPxcHtBBPZARWhFBZBk7chTKLffj1Sk8HsyQYAeMepp7c4UPNmyCtZC9vOmEZCbVG5DejeJKtPr7jNaqJ24ZD"
-PAGE_ID    = "1002823072922245"
+# .env nằm ở thư mục gốc dự án (script này nằm trong scripts/)
+ROOT     = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ENV_PATH = os.path.join(ROOT, ".env")
+LOG      = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ig_check_result.txt")
+load_dotenv(ENV_PATH)
+
+# KHÔNG hardcode token! Đọc từ .env
+LONG_TOKEN = os.environ.get("FB_LONG_LIVED_TOKEN", "")
+PAGE_TOKEN = os.environ.get("FB_PAGE_ACCESS_TOKEN", "")
+PAGE_ID    = os.environ.get("FB_PAGE_ID", "")
 GRAPH      = "https://graph.facebook.com/v19.0"
-LOG        = r"C:\Users\tomng\Downloads\Ai Agentcy for 2M Construction\ig_check_result.txt"
-ENV_PATH   = r"C:\Users\tomng\Downloads\Ai Agentcy for 2M Construction\.env"
+
+if not PAGE_TOKEN or not PAGE_ID:
+    print("❌ Thiếu FB_PAGE_ACCESS_TOKEN hoặc FB_PAGE_ID trong .env — chạy 3_SETUP_FACEBOOK.bat trước.")
+    exit(1)
 
 def set_env(content, key, value):
     pattern = rf"^{key}=.*$"
@@ -19,6 +28,8 @@ IG_ID = ""
 
 # Try 1: /page/instagram_accounts with page token
 for tok_name, tok in [("PAGE_TOKEN", PAGE_TOKEN), ("LONG_TOKEN", LONG_TOKEN)]:
+    if not tok:
+        continue
     r = requests.get(f"{GRAPH}/{PAGE_ID}/instagram_accounts",
         params={"access_token": tok, "fields": "id,name,username"}, timeout=10)
     d = r.json()
@@ -32,6 +43,8 @@ for tok_name, tok in [("PAGE_TOKEN", PAGE_TOKEN), ("LONG_TOKEN", LONG_TOKEN)]:
 # Try 2: /page?fields=instagram_business_account with page token
 if not IG_ID:
     for tok_name, tok in [("PAGE_TOKEN", PAGE_TOKEN), ("LONG_TOKEN", LONG_TOKEN)]:
+        if not tok:
+            continue
         r = requests.get(f"{GRAPH}/{PAGE_ID}",
             params={"access_token": tok, "fields": "instagram_business_account"}, timeout=10)
         d = r.json()
