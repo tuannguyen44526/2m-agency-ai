@@ -923,23 +923,27 @@ with st.sidebar:
         )
         if st.button("💾 Lưu key ImgBB", use_container_width=True, key="imgbb_save_btn"):
             import re as _re
+            _v = _imgbb_key_in.strip()
+            os.environ["IMGBB_API_KEY"] = _v  # luôn set trước — dùng được ngay trong phiên này dù ghi file có lỗi hay không
             _env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
             try:
-                with open(_env_path, "r", encoding="utf-8") as _f:
-                    _ec = _f.read()
+                _ec = ""
+                if os.path.exists(_env_path):
+                    with open(_env_path, "r", encoding="utf-8") as _f:
+                        _ec = _f.read()
                 _p = r"^IMGBB_API_KEY=.*$"
-                _v = _imgbb_key_in.strip()
                 _ec = _re.sub(_p, f"IMGBB_API_KEY={_v}", _ec, flags=_re.MULTILINE) if _re.search(_p, _ec, _re.MULTILINE) else _ec + f"\nIMGBB_API_KEY={_v}"
                 with open(_env_path, "w", encoding="utf-8") as _f:
                     _f.write(_ec)
-                os.environ["IMGBB_API_KEY"] = _v
-                st.success("✓ Đã lưu! Thử upload ảnh lại xem đã hết lỗi chưa.")
-                st.caption("⚠️ Nếu app chạy trên Streamlit Cloud: key này có thể mất khi app tự khởi động lại. "
-                           "Để lưu vĩnh viễn, vào share.streamlit.io → app này → Settings → Secrets → thêm dòng "
-                           "`IMGBB_API_KEY = \"...\"` rồi Save.")
+                st.success("✓ Đã lưu vào .env! Thử upload ảnh lại xem đã hết lỗi chưa.")
                 st.rerun()
             except Exception as _e:
-                st.error(f"Lỗi khi lưu: {_e}")
+                st.warning(
+                    f"✓ Key đã dùng được NGAY cho phiên làm việc này (thử upload ảnh lại là thấy hết lỗi). "
+                    f"Nhưng chưa lưu được vào file trên server ({_e}) — key sẽ MẤT khi app khởi động lại. "
+                    f"Để lưu vĩnh viễn: vào share.streamlit.io → app này → Settings → Secrets → thêm dòng "
+                    f"`IMGBB_API_KEY = \"{_v}\"` rồi Save."
+                )
 
     _exp_label_fb = "✓ Cài đặt FB/IG" if _fb_ok else "⚙️ Kết nối Facebook & Instagram"
     with st.expander(_exp_label_fb, expanded=(not _fb_ok)):
@@ -957,10 +961,15 @@ with st.sidebar:
         with _sc1:
             if st.button("💾 Lưu", use_container_width=True, key="fb_save_btn"):
                 import re as _re
+                os.environ["FB_PAGE_ACCESS_TOKEN"] = _fb_token_in.strip()
+                os.environ["FB_PAGE_ID"] = _fb_page_in.strip()
+                os.environ["IG_BUSINESS_ACCOUNT_ID"] = _ig_id_in.strip()
                 _env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
                 try:
-                    with open(_env_path, "r", encoding="utf-8") as _f:
-                        _ec = _f.read()
+                    _ec = ""
+                    if os.path.exists(_env_path):
+                        with open(_env_path, "r", encoding="utf-8") as _f:
+                            _ec = _f.read()
                     def _set_ev(c, k, v):
                         p = rf"^{k}=.*$"
                         return _re.sub(p, f"{k}={v}", c, flags=_re.MULTILINE) if _re.search(p, c, _re.MULTILINE) else c + f"\n{k}={v}"
@@ -969,13 +978,14 @@ with st.sidebar:
                     _ec = _set_ev(_ec, "IG_BUSINESS_ACCOUNT_ID", _ig_id_in.strip())
                     with open(_env_path, "w", encoding="utf-8") as _f:
                         _f.write(_ec)
-                    os.environ["FB_PAGE_ACCESS_TOKEN"] = _fb_token_in.strip()
-                    os.environ["FB_PAGE_ID"] = _fb_page_in.strip()
-                    os.environ["IG_BUSINESS_ACCOUNT_ID"] = _ig_id_in.strip()
-                    st.success("✓ Đã lưu!")
+                    st.success("✓ Đã lưu vào .env!")
                     st.rerun()
                 except Exception as _e:
-                    st.error(f"Lỗi: {_e}")
+                    st.warning(
+                        f"✓ Đã dùng được NGAY cho phiên này. Nhưng chưa lưu được vào file trên server ({_e}) — "
+                        f"sẽ MẤT khi app khởi động lại. Để lưu vĩnh viễn: vào share.streamlit.io → app này → "
+                        f"Settings → Secrets → thêm các dòng FB_PAGE_ACCESS_TOKEN, FB_PAGE_ID, IG_BUSINESS_ACCOUNT_ID rồi Save."
+                    )
         with _sc2:
             if st.button("🔍 Test", use_container_width=True, key="fb_test_btn"):
                 _tk = (_fb_token_in or _creds["fb_token"]).strip()
