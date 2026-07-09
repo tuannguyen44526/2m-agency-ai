@@ -1556,7 +1556,7 @@ if st.session_state.get("pending_approval"):
         post_mode = st.radio(
             "Chế độ đăng:",
             ["Đăng ngay", "Lên lịch", "Lưu file (thủ công)"],
-            index=0 if fb_connected else 2
+            index=2  # An toàn mặc định: LƯU FILE, không tự đăng — Anh Tuan phải tự chọn "Đăng ngay"/"Lên lịch" sau khi đã đọc & sửa nội dung bên dưới
         )
     with sched_col:
         sched_date = None
@@ -1607,6 +1607,35 @@ if st.session_state.get("pending_approval"):
     if img_url:
         st.caption(f"🔗 URL ảnh: `{img_url[:80]}{'...' if len(img_url) > 80 else ''}`")
 
+    # --- Xem trước & chỉnh sửa nội dung TRƯỚC KHI đăng (bắt buộc) ---
+    st.markdown("#### ✏️ Xem trước nội dung sẽ đăng (sửa trực tiếp nếu cần)")
+    _raw_caption = clean_text(outputs.get("be_viet", outputs.get("be_dang", "")))
+
+    def _looks_like_internal_doc(text: str) -> bool:
+        """Phát hiện nếu nội dung là tài liệu kế hoạch nội bộ (nhiều section/setup kit)
+        thay vì 1 bài đăng thật — tránh lặp lại sự cố đăng nguyên văn tài liệu nội bộ lên Facebook."""
+        markers = ["Prepared by:", "Trạng thái: Sẵn sàng", "MỤC 1", "MỤC 2", "(Đếm:", "1.1 Mô tả",
+                   "1.2 Mô tả", "CONTENT MARKETING TUẦN", "BỘ SETUP FANPAGE"]
+        hits = sum(1 for m in markers if m.lower() in text.lower())
+        return hits >= 2 or len(text) > 1500
+
+    _is_internal_doc = _looks_like_internal_doc(_raw_caption)
+    if _is_internal_doc:
+        st.error(
+            "⚠️ Nội dung bên dưới trông giống TÀI LIỆU KẾ HOẠCH NỘI BỘ (nhiều mục, hướng dẫn setup...), "
+            "KHÔNG phải 1 bài đăng thật. Đây chính là lỗi từng khiến tài liệu nội bộ bị đăng thẳng lên Facebook. "
+            "Hãy tự cắt còn đúng phần bài đăng bạn muốn đăng trước khi bấm Đăng/Lên lịch — hoặc chỉ dùng 'Lưu file (thủ công)'."
+        )
+
+    fb_caption = st.text_area(
+        "📘 Nội dung Facebook (sẽ đăng ĐÚNG NGUYÊN VĂN ô này):",
+        value=_raw_caption, height=180, key="fb_caption_preview"
+    )
+    ig_caption = st.text_area(
+        "📸 Nội dung Instagram (sẽ đăng ĐÚNG NGUYÊN VĂN ô này):",
+        value=_raw_caption, height=140, key="ig_caption_preview"
+    )
+
     # --- Platform selection ---
     plat_col1, plat_col2, plat_col3, plat_col4, plat_col5 = st.columns(5)
     with plat_col1:
@@ -1622,6 +1651,8 @@ if st.session_state.get("pending_approval"):
 
     if not fb_connected and (do_fb or do_ig):
         st.warning("⚠️ Chưa kết nối Facebook API. Xem hướng dẫn kết nối trong sidebar.")
+    if _is_internal_doc and post_mode != "Lưu file (thủ công)" and (do_fb or do_ig):
+        st.error("🛑 Đã khóa đăng Facebook/Instagram vì nội dung vẫn giống tài liệu nội bộ (xem cảnh báo phía trên). Sửa lại nội dung trong ô xem trước rồi thử lại.")
     if do_wp and not site_connected():
         st.warning("⚠️ Chưa kết nối website. Thêm SITE_ADMIN_PASSWORD vào .env (xem ⚙️ Cài đặt Website ở sidebar).")
 
@@ -1639,6 +1670,9 @@ if st.session_state.get("pending_approval"):
         )
 
     if approve_btn:
+        if _is_internal_doc and post_mode != "Lưu file (thủ công)" and (do_fb or do_ig):
+            st.stop()  # chặn cứng — không gọi API đăng bài khi nội dung chưa được xác nhận là bài đăng thật
+
         results_log = []
 
         # --- Prepare schedule datetime ---
@@ -1651,9 +1685,9 @@ if st.session_state.get("pending_approval"):
                 st.error("Giờ không đúng định dạng HH:MM")
                 st.stop()
 
-        # --- Build clean text for each platform ---
-        fb_caption  = clean_text(outputs.get("be_viet", outputs.get("be_dang", "")))
-        ig_caption  = clean_text(outputs.get("be_viet", outputs.get("be_dang", "")))
+        # --- Dùng ĐÚNG nội dung Anh Tuan đã xem/sửa trong ô preview (không tính lại từ agent output) ---
+        fb_caption = st.session_state.get("fb_caption_preview", _raw_caption)
+        ig_caption = st.session_state.get("ig_caption_preview", _raw_caption)
 
         # === FACEBOOK ===
         if do_fb and fb_connected:
