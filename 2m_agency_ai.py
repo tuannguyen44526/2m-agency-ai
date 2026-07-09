@@ -503,11 +503,37 @@ def clean_text(md_text: str) -> str:
     t = re.sub(r"^- ", "• ", t, flags=re.MULTILINE)
     return t.strip()
 
-def upload_image_to_host(image_bytes: bytes, filename: str = "image.jpg") -> str:
-    """Upload ảnh lên free image host, trả về URL public để dùng cho Facebook/Instagram."""
-    # Thử freeimage.host trước
+def upload_image_to_host(image_bytes: bytes, filename: str = "image.jpg") -> tuple[str, str]:
+    """Upload ảnh lên free image host, trả về (url, error_message).
+    url rỗng nếu thất bại — error_message giải thích lý do cụ thể để hiển thị cho Anh Tuan.
+    Ưu tiên imgbb.com nếu đã có key riêng (ổn định hơn) — key demo freeimage.host public hay bị
+    giới hạn/lỗi khi nhiều người cùng dùng chung nên chỉ dùng làm phương án dự phòng cuối."""
+    errors = []
+    b64 = base64.b64encode(image_bytes).decode()
+
+    _imgbb_key = os.environ.get("IMGBB_API_KEY", "").strip()
+    if _imgbb_key:
+        try:
+            r = requests.post(
+                "https://api.imgbb.com/1/upload",
+                data={"key": _imgbb_key, "image": b64, "name": filename},
+                timeout=30
+            )
+            if r.status_code == 200:
+                data = r.json()
+                url = data.get("data", {}).get("url", "")
+                if url:
+                    return url, ""
+                errors.append(f"imgbb: phản hồi không có URL ({data.get('error', {}).get('message', 'không rõ lý do')})")
+            else:
+                errors.append(f"imgbb: lỗi HTTP {r.status_code}")
+        except Exception as _e:
+            errors.append(f"imgbb: {_e}")
+    else:
+        errors.append("Chưa cài ImgBB API Key (xem mục ⚙️ Cài đặt ảnh (ImgBB) ở sidebar)")
+
+    # Dự phòng: freeimage.host bằng key demo public (không ổn định, hay bị giới hạn)
     try:
-        b64 = base64.b64encode(image_bytes).decode()
         r = requests.post(
             "https://freeimage.host/api/1/upload",
             data={"key": "6d207e02198a847aa98d0a2a901485a5", "source": b64, "action": "upload"},
@@ -517,26 +543,14 @@ def upload_image_to_host(image_bytes: bytes, filename: str = "image.jpg") -> str
             data = r.json()
             url = data.get("image", {}).get("url", "")
             if url:
-                return url
-    except Exception:
-        pass
-    # Fallback: imgbb.com upload (key đọc từ .env / Streamlit secrets — KHÔNG hardcode)
-    try:
-        _imgbb_key = os.environ.get("IMGBB_API_KEY", "")
-        if not _imgbb_key:
-            return ""
-        b64 = base64.b64encode(image_bytes).decode()
-        r = requests.post(
-            "https://api.imgbb.com/1/upload",
-            data={"key": _imgbb_key, "image": b64, "name": filename},
-            timeout=30
-        )
-        if r.status_code == 200:
-            data = r.json()
-            return data.get("data", {}).get("url", "")
-    except Exception:
-        pass
-    return ""
+                return url, ""
+            errors.append("freeimage.host: phản hồi không có URL (key demo dùng chung có thể đang bị giới hạn)")
+        else:
+            errors.append(f"freeimage.host: lỗi HTTP {r.status_code}")
+    except Exception as _e:
+        errors.append(f"freeimage.host: {_e}")
+
+    return "", " · ".join(errors)
 
 def fb_post_now(page_id: str, token: str, message: str, image_url: str = "") -> dict:
     """Post to Facebook Page immediately."""
@@ -885,6 +899,47 @@ with st.sidebar:
         st.markdown('<span class="badge-online">📸 Instagram ✓ Đã kết nối</span>', unsafe_allow_html=True)
     else:
         st.markdown('<span class="badge-wait">📸 Instagram ✗ Chưa kết nối</span>', unsafe_allow_html=True)
+
+    # ImgBB (ảnh cho Facebook/Instagram) — cần key riêng vì key demo public hay bị lỗi/giới hạn
+    _imgbb_ok = bool(os.environ.get("IMGBB_API_KEY", "").strip())
+    if _imgbb_ok:
+        st.markdown('<span class="badge-online">🖼️ Ảnh (ImgBB) ✓ Đã cài</span>', unsafe_allow_html=True)
+    else:
+        st.markdown('<span class="badge-wait">🖼️ Ảnh (ImgBB) ✗ Chưa cài — upload ảnh hay lỗi</span>', unsafe_allow_html=True)
+
+    _exp_label_imgbb = "✓ Cài đặt ảnh (ImgBB)" if _imgbb_ok else "⚙️ Cài đặt ảnh (ImgBB) — sửa lỗi upload"
+    with st.expander(_exp_label_imgbb, expanded=(not _imgbb_ok)):
+        st.markdown(
+            "Upload ảnh hay báo lỗi vì app đang dùng key dùng-chung công cộng, dễ bị giới hạn. "
+            "Lấy key ImgBB **miễn phí, không cần xác minh email**, dán vào đây là xong:\n\n"
+            "1. Vào [api.imgbb.com](https://api.imgbb.com/) → đăng nhập bằng Google/Facebook\n"
+            "2. Copy **API key** hiện ra\n"
+            "3. Dán vào ô bên dưới → bấm Lưu"
+        )
+        _imgbb_key_in = st.text_input(
+            "🔑 ImgBB API Key",
+            value=os.environ.get("IMGBB_API_KEY", ""),
+            type="password", key="imgbb_key_input", placeholder="vd: a1b2c3d4e5f6..."
+        )
+        if st.button("💾 Lưu key ImgBB", use_container_width=True, key="imgbb_save_btn"):
+            import re as _re
+            _env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+            try:
+                with open(_env_path, "r", encoding="utf-8") as _f:
+                    _ec = _f.read()
+                _p = r"^IMGBB_API_KEY=.*$"
+                _v = _imgbb_key_in.strip()
+                _ec = _re.sub(_p, f"IMGBB_API_KEY={_v}", _ec, flags=_re.MULTILINE) if _re.search(_p, _ec, _re.MULTILINE) else _ec + f"\nIMGBB_API_KEY={_v}"
+                with open(_env_path, "w", encoding="utf-8") as _f:
+                    _f.write(_ec)
+                os.environ["IMGBB_API_KEY"] = _v
+                st.success("✓ Đã lưu! Thử upload ảnh lại xem đã hết lỗi chưa.")
+                st.caption("⚠️ Nếu app chạy trên Streamlit Cloud: key này có thể mất khi app tự khởi động lại. "
+                           "Để lưu vĩnh viễn, vào share.streamlit.io → app này → Settings → Secrets → thêm dòng "
+                           "`IMGBB_API_KEY = \"...\"` rồi Save.")
+                st.rerun()
+            except Exception as _e:
+                st.error(f"Lỗi khi lưu: {_e}")
 
     _exp_label_fb = "✓ Cài đặt FB/IG" if _fb_ok else "⚙️ Kết nối Facebook & Instagram"
     with st.expander(_exp_label_fb, expanded=(not _fb_ok)):
@@ -1582,14 +1637,16 @@ if st.session_state.get("pending_approval"):
             if _img_cache_key not in st.session_state:
                 with st.spinner("☁️ Đang upload ảnh lên cloud..."):
                     _img_bytes = _uploaded_img.getvalue()
-                    _uploaded_url = upload_image_to_host(_img_bytes, _uploaded_img.name)
+                    _uploaded_url, _upload_err = upload_image_to_host(_img_bytes, _uploaded_img.name)
                     st.session_state[_img_cache_key] = _uploaded_url
+                    st.session_state[f"{_img_cache_key}_err"] = _upload_err
             _cached_url = st.session_state.get(_img_cache_key, "")
             if _cached_url:
                 st.success("✅ Upload thành công!")
                 img_url = _cached_url
             else:
-                st.warning("⚠️ Upload thất bại. Nhập URL thủ công bên phải.")
+                _err = st.session_state.get(f"{_img_cache_key}_err", "")
+                st.warning(f"⚠️ Upload thất bại: {_err or 'không rõ lý do'}. Nhập URL thủ công bên phải, hoặc cài ImgBB key ở sidebar (⚙️ Cài đặt ảnh) rồi thử lại.")
     with _img_col2:
         _manual_url = st.text_input(
             "🔗 Hoặc nhập URL ảnh (phải public):",
