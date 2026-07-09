@@ -1,5 +1,38 @@
 # HỒ SƠ KHÁCH HÀNG 2M CONSTRUCTION — TÀI LIỆU NỘI BỘ
 ## Báo cáo nghiên cứu thị trường Huntsville, Alabama — Tháng 6/2026
+## + Cập nhật chuyên sâu FLOORING & TILE — Tháng 7/2026 (báo cáo mới nhất)
+
+---
+
+## 🆕 NGHIÊN CỨU CHUYÊN SÂU: FLOORING & TILE (07/2026) — ƯU TIÊN THAM CHIẾU KHI LỆNH LIÊN QUAN FLOORING/TILE
+
+**Quy mô thị trường khả dụng (Huntsville + bán kính ~60 phút):** ước tính 105–130 triệu USD/năm (Flooring installation ~68–78tr + Tile installation ~35–50tr). Ngành rất phân mảnh — không đối thủ nào giữ >5% thị phần → cơ hội tốt cho nhà thầu vừa/nhỏ như 2M.
+
+**Tăng trưởng:** vật liệu flooring CAGR 5,6–8,4%/năm đến 2031–2034; LVP/LVT tăng nhanh nhất (CAGR 7,7–8,4%). Dịch vụ lắp đặt tăng chậm hơn (~0,6%/năm) — tăng trưởng đến từ NÂNG CẤP vật liệu (carpet/laminate rẻ → LVP/engineered hardwood/porcelain cao cấp) và chuyển từ DIY sang thuê thợ chuyên nghiệp, không phải từ số lượng dự án tăng ồ ạt.
+
+**Định vị đề xuất:** báo cáo gợi ý phân khúc trung–cao cấp, nhưng 2M hiện còn nhỏ nên ƯU TIÊN TIẾP CẬN RỘNG — không giới hạn nội dung chỉ vào khách cao cấp. Vẫn nhắm Madison/South Huntsville khi phù hợp, nhưng nội dung nên phủ đều mọi ngân sách (từ sửa nhỏ/giá hợp lý ở Decatur/Athens đến cao cấp ở Madison) để tối đa số lượng khách tiếp cận, thay vì thu hẹp vào 1 phân khúc.
+
+**Khu vực ưu tiên:**
+1. Madison (ZIP 35741 — thu nhập hộ $134.655, cao nhất vùng) & South Huntsville/Hampton Cove — thu nhập cao, khả năng chi trả vật liệu cao cấp
+2. North Huntsville/Meridianville/Harvest — nhà xây 1990–2015 đang vào chu kỳ upgrade lần đầu, nhiều nhà mới bàn giao cần "flooring upgrade" trong 6–18 tháng đầu
+3. Decatur/Athens — thị trường phụ, giá hợp lý, LVP/laminate + flooring repair, ít cạnh tranh từ nhà thầu cao cấp
+
+**Chân dung khách hàng (persona) — Flooring & Tile:**
+| Phân khúc | Ngân sách/dự án | Ưu tiên chính | Sợ nhất |
+|-----------|-----------------|----------------|---------|
+| Homeowners ở lâu dài (35–65) | $3K–$25K | Chất lượng, đúng tiến độ, giá minh bạch | Bị chặt chém, thi công ẩu |
+| New Home Buyers (28–42) | $5K–$20K | Thi công nhanh kịp dọn vào ở | Trễ lịch, phát sinh chi phí |
+| Luxury Home Owners (40–65, $200K+) | $15K–$60K+ | Hoàn thiện cao cấp, đúng thiết kế custom | Thợ tay nghề kém làm hỏng vật liệu đắt tiền |
+| Investors/Rental Owners | $3K–$15K/căn | Bền, giá tốt theo khối lượng, tốc độ | Trễ tiến độ, vật liệu hỏng nhanh |
+| House Flippers | $6K–$12K/căn | Tốc độ, giá cố định không phát sinh | Trễ ngày list bán |
+
+**B2B/Referral:** Builders (D.R. Horton, Lennar, Meritage — subcontractor khối lượng lớn cho nhà mới), Realtors (giới thiệu khách sửa nhà trước/sau giao dịch), Interior Designers (dự án cao cấp theo bản vẽ).
+
+**Customer journey (9 giai đoạn, tóm tắt):** Chưa biết vấn đề (cần cảm hứng/before-after) → Nhận ra sàn/tile cũ (sợ chi phí, cần checklist dấu hiệu + giá tham khảo) → So sánh vật liệu (LVP vs hardwood vs tile — cần bảng so sánh khách quan) → So sánh nhà thầu (cần review thật, license, portfolio) → Xin báo giá (cần minh bạch, phản hồi nhanh) → Đọc review → Ký hợp đồng (cần điều khoản rõ, bảo hành) → Thi công (cần cập nhật tiến độ thường xuyên, giữ vệ sinh) → Giới thiệu bạn bè (referral program).
+
+**Chủ đề nội dung nên khai thác:** so sánh vật liệu (LVP vs Laminate vs Hardwood, Porcelain vs Ceramic), before/after case study, hướng dẫn chọn nhà thầu, tips bảo trì sàn/chống mốc grout, xu hướng tile 2026 (large-format porcelain, herringbone pattern).
+
+**Nguồn:** Báo cáo "2M Construction — Flooring & Tile Installation Market Research", chuẩn bị 07/2026 (Phần 1, 2, 4, 5 — báo cáo đầy đủ có 13 phần, cần bổ sung khi có).
 
 ---
 
@@ -94,9 +127,11 @@
 
 | Giai đoạn | Dịch vụ tập trung | Mục tiêu |
 |-----------|-------------------|----------|
-| GĐ1 (0–6 tháng) | Sửa chữa nhỏ, tủ bếp, bê tông, epoxy garage | 15–20 đánh giá 5⭐ + ảnh trước/sau |
+| GĐ1 (0–6 tháng) | **Flooring & Tile** (ưu tiên mới 07/2026 — thị trường 105–130tr USD/năm, tăng trưởng LVP CAGR 7,7–8,4%), sửa chữa nhỏ, tủ bếp, bê tông, epoxy garage | 15–20 đánh giá 5⭐ + ảnh trước/sau |
 | GĐ2 (6–12 tháng) | Mở rộng Deck & Fence | Cạnh tranh với lợi thế kỹ sư kết cấu |
 | GĐ3 (12+ tháng) | Cải tạo bếp/tắm toàn diện, thương mại nhỏ | Hợp đồng giá trị cao |
+
+**Lưu ý quan trọng:** Deck & Fence (mục 5 bên trên) vẫn là dữ liệu tham khảo hữu ích nhưng KHÔNG phải trọng tâm ở GĐ1 — chỉ dùng khi lệnh cụ thể nhắc đến deck/fence. Trọng tâm hiện tại (07/2026) là Flooring & Tile, theo báo cáo mới nhất ở đầu file này.
 
 ---
 

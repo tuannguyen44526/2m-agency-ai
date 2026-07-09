@@ -19,7 +19,7 @@
 | Epoxy | "epoxy garage floor Huntsville AL" | "epoxy flooring Huntsville", "garage floor coating Madison AL" |
 | Deck | "deck builder Huntsville AL" | "deck installation Madison AL", "patio builder Huntsville" |
 | Fence | "fence installation Huntsville AL" | "fence company Madison AL", "fence contractor Harvest AL" |
-| Flooring | "hardwood flooring Huntsville AL" | "LVP flooring Huntsville", "floor installation Madison AL" |
+| Flooring | "hardwood flooring Huntsville AL" | "LVP flooring Huntsville", "floor installation Madison AL", "tile installation Madison AL", "bathroom remodel contractors Huntsville", "LVP vs hardwood Alabama", "cost to install hardwood flooring Huntsville" |
 | Painting | "painting contractor Huntsville AL" | "interior painting Huntsville", "exterior painting Madison AL" |
 | Concrete | "concrete driveway Huntsville AL" | "concrete patio Huntsville", "concrete contractor Madison AL" |
 | Kitchen | "kitchen remodel Huntsville AL" | "cabinet refacing Huntsville", "kitchen renovation Madison AL" |
@@ -44,6 +44,13 @@
 | Gadsden AL | ~1.5 giờ SE | "contractor Gadsden AL", "remodeling Gadsden Alabama" |
 | Cullman AL | ~1 giờ S | "contractor Cullman AL", "deck builder Cullman Alabama" |
 | Florence AL | ~1 giờ W | "contractor Florence AL", "Muscle Shoals contractor" |
+
+### 🔲 Bộ từ khóa chuyên sâu Flooring & Tile (nghiên cứu 07/2026)
+- **Giá cả:** cost to install hardwood flooring, LVP flooring cost per square foot, average cost to retile a bathroom, tile repair cost
+- **Local:** hardwood flooring installation Huntsville AL, LVP flooring Madison AL, tile installation Athens AL, custom tile work Huntsville AL
+- **So sánh:** LVP vs laminate flooring, porcelain vs ceramic tile, engineered vs solid hardwood, best flooring for humid climates
+- **Vấn đề:** cracked tile repair, grout mold removal, water damage flooring repair, how to fix loose tile
+- **Uy tín:** flooring contractor reviews Huntsville, licensed and insured flooring contractor North Alabama
 
 **Quy tắc cho vùng mở rộng:**
 - Mỗi bài blog/post nên target 1-2 thành phố cùng lúc (không nhồi nhét)

@@ -399,30 +399,25 @@ LUẬT CHỌN AGENTS:
 - Yêu cầu SEO/keyword: co_hoc → con_muoi → be_viet → chi_brand → be_dang → be_quan
 - Yêu cầu content: co_hoc → con_muoi → be_viet → chi_brand → dao_dien → be_dang → be_quan
 - Yêu cầu campaign plan: co_hoc → co_chien → con_muoi → be_viet → chi_brand → dao_dien → be_dang → be_quan
-- Luôn bắt đầu bằng co_hoc để có keyword foundation, luôn kết thúc bằng be_quan để có lịch và KPI."""
+- Luôn bắt đầu bằng co_hoc để có keyword foundation, luôn kết thúc bằng be_quan để có lịch và KPI.
+
+LUẬT BÁM LỆNH (QUAN TRỌNG NHẤT):
+- MỌI brief PHẢI nhắc lại NGUYÊN VĂN dịch vụ/chủ đề trong lệnh của Anh Tuan (VD lệnh nói "flooring, tile, remodel" thì mọi brief đều phải ghi rõ "flooring, tile, remodel").
+- TUYỆT ĐỐI không tự thay đổi, mở rộng hay thay thế dịch vụ bằng dịch vụ khác (không tự đổi sang deck/fence/epoxy nếu lệnh không nhắc).
+- Nếu lệnh không nêu dịch vụ cụ thể, brief ghi "full-service general contractor" chứ không tự chọn 1 dịch vụ."""
 
 def get_customer_insights():
-    """Load market research insights from file"""
-    candidates = [
-        Path("C:/Users/tomng/Downloads/Ai Agentcy for 2M Construction/CUSTOMER_INSIGHTS.md"),
-        Path(__file__).parent / "CUSTOMER_INSIGHTS.md",
-        Path("./CUSTOMER_INSIGHTS.md"),
-    ]
-    for p in candidates:
-        if p.exists():
-            return p.read_text(encoding="utf-8")
+    """Load market research insights from file — luôn dùng file cạnh 2m_agency_ai.py, không đọc bản cũ ở Downloads."""
+    p = Path(__file__).parent / "CUSTOMER_INSIGHTS.md"
+    if p.exists():
+        return p.read_text(encoding="utf-8")
     return ""
 
 def get_seo_guidelines():
-    """Load SEO guidelines from file"""
-    candidates = [
-        Path("C:/Users/tomng/Downloads/Ai Agentcy for 2M Construction/SEO_GUIDELINES.md"),
-        Path(__file__).parent / "SEO_GUIDELINES.md",
-        Path("./SEO_GUIDELINES.md"),
-    ]
-    for p in candidates:
-        if p.exists():
-            return p.read_text(encoding="utf-8")
+    """Load SEO guidelines from file — luôn dùng file cạnh 2m_agency_ai.py, không đọc bản cũ ở Downloads."""
+    p = Path(__file__).parent / "SEO_GUIDELINES.md"
+    if p.exists():
+        return p.read_text(encoding="utf-8")
     return ""
 
 def get_company_ctx():
@@ -441,7 +436,9 @@ QUY TẮC 3: {COMPANY['rule_3']}
 """
     if insights:
         ctx += f"""
-===NGHIÊN CỨU THỊ TRƯỜNG & HỒ SƠ KHÁCH HÀNG===
+===NGHIÊN CỨU THỊ TRƯỜNG & HỒ SƠ KHÁCH HÀNG (tài liệu tổng hợp NHIỀU dịch vụ — epoxy, deck, fence, concrete, kitchen, flooring, tile...)===
+⚠️ CHỈ trích dùng phần liên quan đúng dịch vụ/chủ đề trong LỆNH GỐC của Anh Tuan bên dưới.
+⚠️ TUYỆT ĐỐI không tự chuyển chủ đề bài viết sang deck/fence/epoxy hay bất kỳ dịch vụ nào khác chỉ vì nó xuất hiện trong tài liệu này — tài liệu này chỉ là NGUỒN DỮ LIỆU tham khảo, không phải chỉ định chủ đề.
 {insights}
 """
     if seo:
@@ -1100,16 +1097,9 @@ def get_weekly_commands() -> list:
     month    = date.today().month
     day_name = ["Thứ 2","Thứ 3","Thứ 4","Thứ 5","Thứ 6","Thứ 7","CN"][date.today().weekday()]
 
-    # Đọc WEEKLY_PLAN.md nếu tồn tại
-    plan_candidates = [
-        Path("C:/Users/tomng/Downloads/Ai Agentcy for 2M Construction/WEEKLY_PLAN.md"),
-        Path(__file__).parent / "WEEKLY_PLAN.md",
-    ]
-    plan_text = ""
-    for p in plan_candidates:
-        if p.exists():
-            plan_text = p.read_text(encoding="utf-8")
-            break
+    # Đọc WEEKLY_PLAN.md — luôn dùng file cạnh 2m_agency_ai.py, không đọc bản cũ ở Downloads
+    plan_path = Path(__file__).parent / "WEEKLY_PLAN.md"
+    plan_text = plan_path.read_text(encoding="utf-8") if plan_path.exists() else ""
 
     # Chỉ dùng WEEKLY_PLAN.md nếu nó viết cho ĐÚNG tuần hiện tại — tránh gợi ý cũ
     if plan_text and (f"Tuần {week_num}" in plan_text or f"TUẦN {week_num}" in plan_text or f"[Tuần {week_num}]" in plan_text):
@@ -1254,12 +1244,20 @@ def _resp_text(resp) -> str:
                 parts.append(_t)
     return "\n".join(p for p in parts if p)
 
-def call_agent(client: anthropic.Anthropic, agent_id: str, brief: str, context: str) -> str:
+def call_agent(client: anthropic.Anthropic, agent_id: str, brief: str, context: str, command: str = "") -> str:
     agent = AGENTS[agent_id]
     system = agent["soul"] + "\n\n===COMPANY INFO===\n" + get_company_ctx()
-    user_msg = f"NHIỆM VỤ: {brief}"
+    user_msg = ""
+    if command.strip():
+        user_msg += (
+            f'===LỆNH GỐC TỪ ANH TUAN (ƯU TIÊN TUYỆT ĐỐI)===\n"{command}"\n\n'
+            "QUY TẮC BẮT BUỘC: Chỉ viết về đúng dịch vụ/chủ đề trong LỆNH GỐC ở trên. "
+            "Mọi ví dụ trong hướng dẫn vai trò (epoxy, deck, fence...) chỉ là minh hoạ FORMAT — "
+            "TUYỆT ĐỐI không lấy làm chủ đề nếu lệnh gốc không nhắc đến.\n\n"
+        )
+    user_msg += f"NHIỆM VỤ: {brief}"
     if context.strip():
-        user_msg += f"\n\n===BỐI CẢNH TỪ CÁC AGENT TRƯỚC===\n{context}"
+        user_msg += f"\n\n===BỐI CẢNH TỪ CÁC AGENT TRƯỚC (chỉ tham khảo cho nhất quán, không đổi chủ đề)===\n{context}"
     resp = client.messages.create(
         model=agent["model"],
         max_tokens=2500,
@@ -1278,15 +1276,11 @@ def call_cmo(client: anthropic.Anthropic, command: str) -> dict:
     )
     return parse_cmo_json(_resp_text(resp))
 
-BASE_DIR = Path("C:/Users/tomng/Downloads/Ai Agentcy for 2M Construction")
+BASE_DIR = Path(__file__).parent
 
 def get_base_dir() -> Path:
-    """Trả về thư mục gốc của dự án"""
-    candidates = [BASE_DIR, Path(__file__).parent, Path(".")]
-    for p in candidates:
-        if p.exists():
-            return p
-    return Path(".")
+    """Trả về thư mục gốc của dự án — luôn là thư mục chứa 2m_agency_ai.py."""
+    return BASE_DIR if BASE_DIR.exists() else Path(".")
 
 def save_output(campaign_name: str, full_md: str) -> str | None:
     try:
@@ -1490,7 +1484,7 @@ if run_btn:
         brief   = briefs.get(aid, f"Lam theo yeu cau: {command}")
 
         try:
-            result      = call_agent(client, aid, brief, context)
+            result      = call_agent(client, aid, brief, context, command)
             outputs[aid] = result
             full_md     += f"---\n\n## {agent['emoji']} {agent['name'].upper()} ({agent['role']})\n\n{result}\n\n"
             ph.success(f"**{agent['name']}** -- Xong!")

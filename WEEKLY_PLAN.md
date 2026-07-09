@@ -8,5 +8,5 @@
 # - Mỗi dòng bắt đầu bằng "- " = 1 lệnh nhanh, tối đa 6 dòng đầu
 
 ## VÍ DỤ (xóa dấu # đầu dòng và sửa đúng số tuần khi muốn dùng):
-# - [Tuần 29] Tạo content Facebook về epoxy garage floor Huntsville AL — ảnh before/after
-# - [Tuần 29] Viết bài Nextdoor khu Madison: vừa hoàn thành dự án deck cho khách
+# - [Tuần 29] Tạo content Facebook về LVP flooring Huntsville AL — ảnh before/after
+# - [Tuần 29] Viết bài Nextdoor khu Madison: vừa hoàn thành dự án tile phòng tắm cho khách
